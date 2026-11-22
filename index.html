@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>মাতারবাড়ী সঞ্চয় ও ঐক্য সংঘ</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,"Noto Sans Bengali",sans-serif;background:#f4f7f5;color:#17352b}
+header{background:#145c43;color:white;padding:24px 16px;text-align:center}main{max-width:850px;margin:22px auto;padding:0 14px}
+.card{background:white;padding:18px;border-radius:14px;margin:14px 0;box-shadow:0 2px 12px #0001}
+input,button{font:inherit;padding:11px;border:1px solid #ccd8d1;border-radius:8px;width:100%;margin:6px 0}
+button{background:#145c43;color:white;border:0;font-weight:600}
+small{color:#5b6e65}.hidden{display:none}.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+table{width:100%;border-collapse:collapse}td,th{padding:9px;border-bottom:1px solid #e3eae6;text-align:left}
+@media(max-width:560px){.row{grid-template-columns:1fr}}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<header><h2>মাতারবাড়ী সঞ্চয় ও ঐক্য সংঘ</h2><p>সঞ্চয় • ঐক্য • উন্নয়ন</p></header>
+<main>
+<section class="card" id="config">
+<h3>ওয়েবসাইট সংযোগ</h3>
+<p>Supabase Project URL ও Publishable key বসান। Secret key কখনো এখানে দেবেন না।</p>
+<input id="url" placeholder="Supabase Project URL">
+<input id="key" placeholder="Supabase Publishable key">
+<button onclick="connect()">সংযোগ করুন</button><small id="configMsg"></small>
+</section>
+<section class="card hidden" id="login">
+<h3>সদস্য লগইন</h3><input id="email" type="email" placeholder="ইমেইল">
+<input id="password" type="password" placeholder="পাসওয়ার্ড">
+<button onclick="signIn()">লগইন</button><small id="loginMsg"></small>
+</section>
+<section class="card hidden" id="dashboard">
+<div class="row"><div><h3 id="welcome">সদস্য ড্যাশবোর্ড</h3><small>আপনার ব্যক্তিগত হিসাব</small></div><div><button onclick="signOut()">লগআউট</button></div></div>
+<h3>মাসিক সঞ্চয়: ৳২০০</h3><div id="records">হিসাব লোড হচ্ছে...</div>
+</section>
+<section class="card hidden" id="admin">
+<h3>অ্যাডমিন: লেনদেন যোগ করুন</h3>
+<input id="memberId" placeholder="সদস্যের User ID">
+<div class="row"><input id="amount" type="number" placeholder="টাকার পরিমাণ"><input id="kind" placeholder="ধরন (জমা/উত্তোলন)"></div>
+<input id="note" placeholder="বিবরণ">
+<button onclick="addTransaction()">হিসাব সংরক্ষণ</button><small id="adminMsg"></small>
+</section>
+</main>
+<script>
+let supabaseClient=null,currentUser=null;
+function connect(){
+ const u=document.getElementById('url').value.trim(), k=document.getElementById('key').value.trim();
+ if(!u||!k){document.getElementById('configMsg').textContent='দুটি ঘর পূরণ করুন।';return}
+ supabaseClient=window.supabase.createClient(u,k);
+ document.getElementById('configMsg').textContent='সংযোগের তথ্য এই ব্রাউজার সেশনে সেট হয়েছে।';
+ document.getElementById('login').classList.remove('hidden');
+}
+async function signIn(){
+ const {data,error}=await supabaseClient.auth.signInWithPassword({email:email.value.trim(),password:password.value});
+ if(error){loginMsg.textContent=error.message;return}
+ currentUser=data.user; await loadDashboard();
+}
+async function loadDashboard(){
+ login.classList.add('hidden');dashboard.classList.remove('hidden');
+ const {data:profile}=await supabaseClient.from('profiles').select('full_name,role').eq('id',currentUser.id).maybeSingle();
+ welcome.textContent=(profile?.full_name||'সদস্য')+' — ড্যাশবোর্ড';
+ if(profile?.role==='admin')admin.classList.remove('hidden');
+ const {data,error}=await supabaseClient.from('transactions').select('id,amount,transaction_type,description,created_at').order('created_at',{ascending:false});
+ if(error){records.textContent='হিসাব আনা যায়নি: '+error.message;return}
+ if(!data?.length){records.textContent='এখনো কোনো লেনদেন যোগ হয়নি।';return}
+ records.innerHTML='<table><tr><th>তারিখ</th><th>ধরন</th><th>টাকা</th><th>বিবরণ</th></tr>'+data.map(x=>`<tr><td>${new Date(x.created_at).toLocaleDateString('bn-BD')}</td><td>${esc(x.transaction_type)}</td><td>৳${x.amount}</td><td>${esc(x.description||'')}</td></tr>`).join('')+'</table>';
+}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+async function addTransaction(){
+ const {error}=await supabaseClient.from('transactions').insert({member_id:memberId.value.trim(),amount:Number(amount.value),transaction_type:kind.value.trim(),description:note.value.trim(),created_by:currentUser.id});
+ adminMsg.textContent=error?error.message:'লেনদেন যোগ হয়েছে।'; if(!error)await loadDashboard();
+}
+async function signOut(){await supabaseClient.auth.signOut();location.reload()}
+</script>
+</body></html>
