@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html lang="bn">
 <head>
@@ -5,137 +6,456 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>মাতারবাড়ী সঞ্চয় ও ঐক্য সংঘ</title>
 <style>
-*{box-sizing:border-box}body{margin:0;font-family:system-ui,"Noto Sans Bengali",sans-serif;background:#f4f7f5;color:#17352b}
-header{background:#145c43;color:white;padding:24px 16px;text-align:center}main{max-width:850px;margin:22px auto;padding:0 14px}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,"Noto Sans Bengali",sans-serif;background:#f4f7f5;color:#17352b}
+header{background:#145c43;color:white;padding:24px 16px;text-align:center}
+main{max-width:850px;margin:22px auto;padding:0 14px}
 .card{background:white;padding:18px;border-radius:14px;margin:14px 0;box-shadow:0 2px 12px #0001}
-input,button{font:inherit;padding:11px;border:1px solid #ccd8d1;border-radius:8px;width:100%;margin:6px 0}
-button{background:#145c43;color:white;border:0;font-weight:600;cursor:pointer}button:disabled{opacity:.6;cursor:wait}
-small{color:#5b6e65}.hidden{display:none}.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.table-wrap{overflow-x:auto}table{width:100%;border-collapse:collapse}td,th{padding:9px;border-bottom:1px solid #e3eae6;text-align:left}
-.status{display:block;min-height:1.5em;margin-top:5px}.error{color:#a12727}
+input,button,select{font:inherit;padding:11px;border:1px solid #ccd8d1;border-radius:8px;width:100%;margin:6px 0}
+button{background:#145c43;color:white;border:0;font-weight:600;cursor:pointer}
+button:disabled{opacity:.6}
+small{color:#5b6e65}
+.hidden{display:none}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+td,th{padding:9px;border-bottom:1px solid #e3eae6;text-align:left}
+.status{display:block;min-height:1.5em;margin-top:5px}
+.error{color:#a12727}
 @media(max-width:560px){.row{grid-template-columns:1fr}}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-<header><h2>মাতারবাড়ী সঞ্চয় ও ঐক্য সংঘ</h2><p>সঞ্চয় • ঐক্য • উন্নয়ন</p></header>
+<header>
+<h2>মাতারবাড়ী সঞ্চয় ও ঐক্য সংঘ</h2>
+<p>সঞ্চয় • ঐক্য • উন্নয়ন</p>
+</header>
+
 <main>
 <section class="card" id="config">
 <h3>ওয়েবসাইট সংযোগ</h3>
-<p>Supabase Project URL ও Publishable key বসান। Secret/service-role key কখনো এখানে দেবেন না।</p>
-<label for="url">Supabase Project URL</label><input id="url" type="url" placeholder="https://your-project.supabase.co" autocomplete="url">
-<label for="key">Supabase Publishable key</label><input id="key" type="password" placeholder="Publishable key" autocomplete="off">
-<button id="connectBtn" type="button">সংযোগ করুন</button><small id="configMsg" class="status" aria-live="polite"></small>
+<label>Supabase Project URL</label>
+<input id="url" type="url" placeholder="https://your-project.supabase.co">
+<label>Supabase Publishable key</label>
+<input id="key" type="password" placeholder="Publishable key">
+<button id="connectBtn">সংযোগ করুন</button>
+<small id="configMsg" class="status"></small>
 </section>
+
 <section class="card hidden" id="login">
-<h3>সদস্য লগইন</h3>
-<label for="userId">User ID (MSH001–MSH015)</label><input id="userId" placeholder="যেমন MSH001" autocomplete="username" maxlength="6">
-<label for="password">পাসওয়ার্ড</label><input id="password" type="password" autocomplete="current-password">
-<button id="loginBtn" type="button">লগইন</button><small id="loginMsg" class="status" aria-live="polite"></small>
+<h3>লগইন</h3>
+<p>অ্যাডমিন ইমেইল অথবা সদস্যের User ID দিন।</p>
+<label>ইমেইল / User ID</label>
+<input id="loginId" placeholder="ইমেইল অথবা MSH001" autocomplete="username">
+<label>পাসওয়ার্ড</label>
+<input id="password" type="password" autocomplete="current-password">
+<button id="loginBtn">লগইন</button>
+<small id="loginMsg" class="status"></small>
 </section>
+
 <section class="card hidden" id="dashboard">
-<div class="row"><div><h3 id="welcome">সদস্য ড্যাশবোর্ড</h3><small>আপনার ব্যক্তিগত হিসাব</small></div><div><button id="logoutBtn" type="button">লগআউট</button></div></div>
-<h3>মাসিক সঞ্চয়: ৳২০০</h3><div id="records" aria-live="polite">হিসাব লোড হচ্ছে...</div>
+<div class="row">
+<div>
+<h3 id="welcome">ড্যাশবোর্ড</h3>
+<small>আপনার হিসাব</small>
+</div>
+<div>
+<button id="logoutBtn">লগআউট</button>
+</div>
+</div>
+<h3>মাসিক সঞ্চয়: ৳২০০</h3>
+<div id="records">হিসাব লোড হচ্ছে...</div>
 </section>
+
 <section class="card hidden" id="admin">
 <h3>অ্যাডমিন: সদস্য অ্যাকাউন্ট তৈরি</h3>
-<p>শুধু অ্যাডমিন অ্যাকাউন্টে এই ফর্ম দেখানো হয়। সার্ভার/Edge Function-কেও অ্যাডমিন অনুমতি যাচাই করতে হবে।</p>
-<label for="newMemberId">সদস্যের User ID</label><select id="newMemberId"><option value="">সদস্য নির্বাচন করুন</option></select>
-<label for="newMemberName">সদস্যের নাম</label><input id="newMemberName" autocomplete="name" maxlength="100" placeholder="পূর্ণ নাম">
-<label for="newMemberPassword">অস্থায়ী পাসওয়ার্ড</label><input id="newMemberPassword" type="password" autocomplete="new-password" minlength="8">
-<button id="createAccountBtn" type="button">সদস্য অ্যাকাউন্ট তৈরি করুন</button><small id="createMsg" class="status" aria-live="polite"></small>
+
+<label>সদস্য নির্বাচন করুন</label>
+<select id="newMemberId">
+<option value="">সদস্য নির্বাচন করুন</option>
+</select>
+
+<label>অস্থায়ী পাসওয়ার্ড (কমপক্ষে ১২ অক্ষর)</label>
+<input id="newMemberPassword" type="password" minlength="12" autocomplete="new-password">
+
+<button id="createAccountBtn">সদস্য অ্যাকাউন্ট তৈরি করুন</button>
+<small id="createMsg" class="status"></small>
+
 <hr>
+
 <h3>অ্যাডমিন: লেনদেন যোগ করুন</h3>
-<label for="memberId">সদস্যের User ID</label><select id="memberId"><option value="">সদস্য নির্বাচন করুন</option></select>
-<div class="row"><div><label for="amount">টাকার পরিমাণ</label><input id="amount" type="number" min="0.01" step="0.01" inputmode="decimal" placeholder="টাকার পরিমাণ"></div><div><label for="kind">ধরন</label><select id="kind"><option value="">নির্বাচন করুন</option><option value="জমা">জমা</option><option value="উত্তোলন">উত্তোলন</option></select></div></div>
-<label for="note">বিবরণ</label><input id="note" maxlength="500" placeholder="বিবরণ">
-<button id="transactionBtn" type="button">হিসাব সংরক্ষণ</button><small id="adminMsg" class="status" aria-live="polite"></small>
+
+<label>সদস্য নির্বাচন করুন</label>
+<select id="memberId">
+<option value="">সদস্য নির্বাচন করুন</option>
+</select>
+
+<div class="row">
+<div>
+<label>টাকার পরিমাণ</label>
+<input id="amount" type="number" min="0.01" step="0.01">
+</div>
+<div>
+<label>লেনদেনের ধরন</label>
+<select id="kind">
+<option value="">নির্বাচন করুন</option>
+<option value="জমা">জমা</option>
+<option value="উত্তোলন">উত্তোলন</option>
+</select>
+</div>
+</div>
+
+<label>বিবরণ</label>
+<input id="note" maxlength="500" placeholder="বিবরণ">
+
+<button id="transactionBtn">হিসাব সংরক্ষণ</button>
+<small id="adminMsg" class="status"></small>
 </section>
 </main>
+
 <script>
 'use strict';
-let supabaseClient=null,currentUser=null,activeMemberId=null,isAdmin=false;
-const $=id=>document.getElementById(id);
-const memberIds=Array.from({length:15},(_,i)=>`MSH${String(i+1).padStart(3,'0')}`);
-function setMessage(id,message,isError=false){const el=$(id);el.textContent=message;el.classList.toggle('error',isError)}
-function setBusy(id,busy){$(id).disabled=busy}
-function validMemberId(value){return /^MSH(?:00[1-9]|01[0-5])$/.test(value)}
-function populateMemberOptions(){for(const id of ['newMemberId','memberId']){const select=$(id);for(const memberId of memberIds){const option=document.createElement('option');option.value=memberId;option.textContent=memberId;select.appendChild(option)}}}
-populateMemberOptions();
-function connect(){
- const projectUrl=$('url').value.trim(),publishableKey=$('key').value.trim();
- let parsedUrl;
- try{parsedUrl=new URL(projectUrl)}catch{setMessage('configMsg','সঠিক Supabase Project URL দিন।',true);return}
- if(!['https:','http:'].includes(parsedUrl.protocol)||!publishableKey){setMessage('configMsg','Project URL ও Publishable key দিন।',true);return}
- if(parsedUrl.protocol!=='https:'&&parsedUrl.hostname!=='localhost'){setMessage('configMsg','নিরাপদ সংযোগের জন্য HTTPS URL ব্যবহার করুন।',true);return}
- if(!window.supabase?.createClient){setMessage('configMsg','Supabase client লোড হয়নি। পৃষ্ঠা রিফ্রেশ করে আবার চেষ্টা করুন।',true);return}
- try{supabaseClient=window.supabase.createClient(projectUrl.replace(/\/$/,''),publishableKey)}catch{setMessage('configMsg','Supabase সংযোগ তৈরি করা যায়নি। URL ও Publishable key যাচাই করুন।',true);return}
- $('config').classList.add('hidden');$('login').classList.remove('hidden');setMessage('configMsg','');
+
+let supabaseClient = null;
+let currentUser = null;
+let isAdmin = false;
+let projectUrl = '';
+let publishableKey = '';
+
+const $ = id => document.getElementById(id);
+
+function message(id, text, error=false) {
+  const el = $(id);
+  el.textContent = text;
+  el.classList.toggle('error', error);
 }
-async function callSmoothHandler(payload,accessToken=''){
- const {data:{session}}=await supabaseClient.auth.getSession();
- const token=accessToken||session?.access_token||'';
- const {data:{supabaseUrl,supabaseKey}}=supabaseClient;
- const response=await fetch(`${supabaseUrl}/functions/v1/smooth-handler`,{method:'POST',headers:{'Content-Type':'application/json','apikey':supabaseKey,...(token?{Authorization:`Bearer ${token}`}:{})},body:JSON.stringify(payload)});
- let result={};try{result=await response.json()}catch{}
- if(!response.ok)throw new Error(typeof result.error==='string'?result.error:'অনুরোধটি সম্পন্ন হয়নি। Edge Function configuration যাচাই করুন।');
- return result;
+
+function busy(id, value) {
+  $(id).disabled = value;
 }
-async function signIn(){
- const userId=$('userId').value.trim().toUpperCase(),password=$('password').value;
- if(!validMemberId(userId)){setMessage('loginMsg','সঠিক User ID দিন (MSH001–MSH015)।',true);return}
- if(!password){setMessage('loginMsg','পাসওয়ার্ড দিন।',true);return}
- setBusy('loginBtn',true);setMessage('loginMsg','লগইন হচ্ছে...');
- try{
-  // smooth-handler authenticates user_id/password and returns a Supabase Auth session (session or token pair).
-  const result=await callSmoothHandler({action:'login',user_id:userId,password});
-  const authSession=result.session||result;
-  if(!authSession.access_token||!authSession.refresh_token)throw new Error('লগইন সাড়া অসম্পূর্ণ। Edge Function-এ access_token ও refresh_token ফেরত দিন।');
-  const {data,error}=await supabaseClient.auth.setSession({access_token:authSession.access_token,refresh_token:authSession.refresh_token});
-  if(error||!data.user)throw new Error('লগইন সেশন যাচাই করা যায়নি।');
-  currentUser=data.user;activeMemberId=userId;await loadDashboard();
- }catch(error){setMessage('loginMsg',error.message||'লগইন করা যায়নি।',true)}finally{setBusy('loginBtn',false)}
+
+function validMemberId(value) {
+  return /^MSH(?:00[1-9]|01[0-5])$/.test(value);
 }
-async function loadDashboard(){
- $('login').classList.add('hidden');$('dashboard').classList.remove('hidden');$('admin').classList.add('hidden');
- $('records').textContent='হিসাব লোড হচ্ছে...';
- const {data:profile,error:profileError}=await supabaseClient.from('profiles').select('full_name,role').eq('id',currentUser.id).maybeSingle();
- if(profileError||!profile){setMessage('loginMsg','অ্যাকাউন্টের প্রোফাইল পাওয়া যায়নি। অ্যাডমিনের সঙ্গে যোগাযোগ করুন।',true);await supabaseClient.auth.signOut();$('dashboard').classList.add('hidden');$('login').classList.remove('hidden');return}
- isAdmin=profile.role==='admin';$('welcome').textContent=`${profile.full_name||activeMemberId} — ড্যাশবোর্ড`;
- if(isAdmin)$('admin').classList.remove('hidden');
- let query=supabaseClient.from('transactions').select('id,amount,transaction_type,description,created_at').order('created_at',{ascending:false});
- // Always scope member reads to their own ID; admin reads still depend on database RLS.
- if(!isAdmin)query=query.eq('member_id',activeMemberId);
- const {data,error}=await query;
- if(error){$('records').textContent='হিসাব আনা যায়নি।';return}
- if(!data?.length){$('records').textContent='এখনো কোনো লেনদেন যোগ হয়নি।';return}
- const rows=data.map(x=>`<tr><td>${esc(formatDate(x.created_at))}</td><td>${esc(x.transaction_type??'')}</td><td>৳${esc(x.amount??'')}</td><td>${esc(x.description??'')}</td></tr>`).join('');
- $('records').innerHTML=`<div class="table-wrap"><table><thead><tr><th>তারিখ</th><th>ধরন</th><th>টাকা</th><th>বিবরণ</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+
+function escapeHTML(value) {
+  return String(value ?? '').replace(/[&<>"']/g, c => ({
+    '&':'&amp;', '<':'&lt;', '>':'&gt;',
+    '"':'&quot;', "'":'&#39;'
+  }[c]));
 }
-function formatDate(value){const date=new Date(value);return Number.isNaN(date.getTime())?'—':date.toLocaleDateString('bn-BD')}
-function esc(value){return String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
-async function createMemberAccount(){
- if(!isAdmin){setMessage('createMsg','এই কাজের অনুমতি নেই।',true);return}
- const userId=$('newMemberId').value,fullName=$('newMemberName').value.trim(),password=$('newMemberPassword').value;
- if(!validMemberId(userId)||!fullName||fullName.length>100||password.length<8){setMessage('createMsg','সদস্য, নাম এবং কমপক্ষে ৮ অক্ষরের পাসওয়ার্ড দিন।',true);return}
- setBusy('createAccountBtn',true);setMessage('createMsg','অ্যাকাউন্ট তৈরি হচ্ছে...');
- try{
-  await callSmoothHandler({action:'create_member',user_id:userId,password,full_name:fullName});
-  $('newMemberId').value='';$('newMemberName').value='';$('newMemberPassword').value='';
-  setMessage('createMsg',`${userId} অ্যাকাউন্ট তৈরি হয়েছে। পাসওয়ার্ডটি সদস্যকে নিরাপদে দিন।`);
- }catch(error){setMessage('createMsg',error.message||'অ্যাকাউন্ট তৈরি করা যায়নি।',true)}finally{setBusy('createAccountBtn',false)}
+
+function formatDate(value) {
+  const d = new Date(value);
+  return Number.isNaN(d.getTime())
+    ? '—'
+    : d.toLocaleDateString('bn-BD');
 }
-async function addTransaction(){
- if(!isAdmin){setMessage('adminMsg','এই কাজের অনুমতি নেই।',true);return}
- const memberId=$('memberId').value,amount=Number($('amount').value),kind=$('kind').value,note=$('note').value.trim();
- if(!validMemberId(memberId)||!Number.isFinite(amount)||amount<=0||!['জমা','উত্তোলন'].includes(kind)||note.length>500){setMessage('adminMsg','সঠিক সদস্য, ধনাত্মক টাকার পরিমাণ ও লেনদেনের ধরন দিন।',true);return}
- setBusy('transactionBtn',true);
- const {error}=await supabaseClient.from('transactions').insert({member_id:memberId,amount,transaction_type:kind,description:note,created_by:currentUser.id});
- if(error){setMessage('adminMsg','লেনদেন সংরক্ষণ হয়নি। অনুমতি ও ডাটাবেস নীতি যাচাই করুন।',true)}else{$('amount').value='';$('kind').value='';$('note').value='';setMessage('adminMsg','লেনদেন যোগ হয়েছে।');await loadDashboard()}
- setBusy('transactionBtn',false);
+
+function connect() {
+  projectUrl = $('url').value.trim().replace(/\/$/, '');
+  publishableKey = $('key').value.trim();
+
+  try {
+    const parsed = new URL(projectUrl);
+    if (!['https:', 'http:'].includes(parsed.protocol) ||
+        !publishableKey ||
+        (parsed.protocol !== 'https:' && parsed.hostname !== 'localhost')) {
+      throw new Error();
+    }
+  } catch {
+    message('configMsg', 'সঠিক Project URL ও Publishable key দিন।', true);
+    return;
+  }
+
+  if (!window.supabase?.createClient) {
+    message('configMsg', 'Supabase client লোড হয়নি। পৃষ্ঠা Refresh করুন।', true);
+    return;
+  }
+
+  supabaseClient = window.supabase.createClient(
+    projectUrl,
+    publishableKey
+  );
+
+  $('config').classList.add('hidden');
+  $('login').classList.remove('hidden');
+  message('configMsg', '');
 }
-async function signOut(){if(supabaseClient)await supabaseClient.auth.signOut();currentUser=null;activeMemberId=null;isAdmin=false;$('dashboard').classList.add('hidden');$('admin').classList.add('hidden');$('login').classList.remove('hidden');$('password').value='';setMessage('loginMsg','')}
-$('connectBtn').addEventListener('click',connect);$('loginBtn').addEventListener('click',signIn);$('logoutBtn').addEventListener('click',signOut);$('createAccountBtn').addEventListener('click',createMemberAccount);$('transactionBtn').addEventListener('click',addTransaction);
+
+async function signIn() {
+  const loginId = $('loginId').value.trim();
+  const password = $('password').value;
+
+  if (!loginId || !password) {
+    message('loginMsg', 'ইমেইল/User ID ও পাসওয়ার্ড দিন।', true);
+    return;
+  }
+
+  let email;
+
+  if (validMemberId(loginId.toUpperCase())) {
+    email = `${loginId.toLowerCase()}@members.matarbari.local`;
+  } else if (loginId.includes('@')) {
+    email = loginId;
+  } else {
+    message('loginMsg', 'সঠিক ইমেইল অথবা MSH User ID দিন।', true);
+    return;
+  }
+
+  busy('loginBtn', true);
+  message('loginMsg', 'লগইন হচ্ছে...');
+
+  try {
+    const {data, error} =
+      await supabaseClient.auth.signInWithPassword({
+        email,
+        password
+      });
+
+    if (error) throw error;
+
+    currentUser = data.user;
+    await loadDashboard();
+
+  } catch (error) {
+    message('loginMsg', error.message || 'লগইন করা যায়নি।', true);
+  } finally {
+    busy('loginBtn', false);
+  }
+}
+
+async function loadDashboard() {
+  $('login').classList.add('hidden');
+  $('dashboard').classList.remove('hidden');
+  $('admin').classList.add('hidden');
+  $('records').textContent = 'হিসাব লোড হচ্ছে...';
+
+  const {data: profile, error} = await supabaseClient
+    .from('profiles')
+    .select('full_name,role')
+    .eq('id', currentUser.id)
+    .maybeSingle();
+
+  if (error || !profile) {
+    await supabaseClient.auth.signOut();
+    $('dashboard').classList.add('hidden');
+    $('login').classList.remove('hidden');
+    message('loginMsg', 'প্রোফাইল পাওয়া যায়নি।', true);
+    return;
+  }
+
+  isAdmin = profile.role === 'admin';
+  $('welcome').textContent =
+    `${profile.full_name || 'সদস্য'} — ড্যাশবোর্ড`;
+
+  if (isAdmin) {
+    $('admin').classList.remove('hidden');
+    await loadAdminMembers();
+  }
+
+  await loadTransactions();
+}
+
+async function loadTransactions() {
+  let query = supabaseClient
+    .from('transactions')
+    .select('id,member_id,amount,transaction_type,description,created_at')
+    .order('created_at', {ascending:false});
+
+  if (!isAdmin) {
+    query = query.eq('member_id', currentUser.id);
+  }
+
+  const {data, error} = await query;
+
+  if (error) {
+    $('records').textContent = 'হিসাব আনা যায়নি। ডাটাবেস অনুমতি যাচাই করুন।';
+    return;
+  }
+
+  if (!data?.length) {
+    $('records').textContent = 'এখনো কোনো লেনদেন যোগ হয়নি।';
+    return;
+  }
+
+  const rows = data.map(x => `
+    <tr>
+      <td>${escapeHTML(formatDate(x.created_at))}</td>
+      <td>${escapeHTML(x.transaction_type)}</td>
+      <td>৳${escapeHTML(x.amount)}</td>
+      <td>${escapeHTML(x.description)}</td>
+    </tr>
+  `).join('');
+
+  $('records').innerHTML = `
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>তারিখ</th><th>ধরন</th><th>টাকা</th><th>বিবরণ</th></tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+}
+
+async function loadAdminMembers() {
+  const {data, error} = await supabaseClient
+    .from('member_directory')
+    .select('member_code,full_name,auth_user_id')
+    .order('member_code');
+
+  if (error) {
+    message('createMsg', 'সদস্য তালিকা আনা যায়নি। অনুমতি যাচাই করুন।', true);
+    return;
+  }
+
+  const createSelect = $('newMemberId');
+  const transactionSelect = $('memberId');
+
+  createSelect.innerHTML = '<option value="">সদস্য নির্বাচন করুন</option>';
+  transactionSelect.innerHTML = '<option value="">সদস্য নির্বাচন করুন</option>';
+
+  for (const member of data || []) {
+    if (!member.auth_user_id) {
+      const option = document.createElement('option');
+      option.value = member.member_code;
+      option.textContent = `${member.member_code} — ${member.full_name}`;
+      createSelect.appendChild(option);
+    } else {
+      const option = document.createElement('option');
+      option.value = member.auth_user_id;
+      option.textContent = `${member.member_code} — ${member.full_name}`;
+      transactionSelect.appendChild(option);
+    }
+  }
+}
+
+async function createMemberAccount() {
+  if (!isAdmin) {
+    message('createMsg', 'অনুমতি নেই।', true);
+    return;
+  }
+
+  const userId = $('newMemberId').value;
+  const password = $('newMemberPassword').value;
+
+  if (!validMemberId(userId) || password.length < 12) {
+    message('createMsg', 'সদস্য নির্বাচন করুন এবং কমপক্ষে ১২ অক্ষরের পাসওয়ার্ড দিন।', true);
+    return;
+  }
+
+  busy('createAccountBtn', true);
+  message('createMsg', 'অ্যাকাউন্ট তৈরি হচ্ছে...');
+
+  try {
+    const {data:{session}} = await supabaseClient.auth.getSession();
+
+    if (!session?.access_token) {
+      throw new Error('অ্যাডমিন সেশন পাওয়া যায়নি। আবার লগইন করুন।');
+    }
+
+    const response = await fetch(
+      `${projectUrl}/functions/v1/create-member-account`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': publishableKey,
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({
+          user_id: userId,
+          password
+        })
+      }
+    );
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.error || 'অ্যাকাউন্ট তৈরি করা যায়নি।');
+    }
+
+    $('newMemberPassword').value = '';
+    message('createMsg', `${userId} অ্যাকাউন্ট তৈরি হয়েছে।`);
+
+    await loadAdminMembers();
+
+  } catch (error) {
+    message('createMsg', error.message || 'অ্যাকাউন্ট তৈরি করা যায়নি।', true);
+  } finally {
+    busy('createAccountBtn', false);
+  }
+}
+
+async function addTransaction() {
+  if (!isAdmin) {
+    message('adminMsg', 'অনুমতি নেই।', true);
+    return;
+  }
+
+  const memberAuthId = $('memberId').value;
+  const amount = Number($('amount').value);
+  const kind = $('kind').value;
+  const note = $('note').value.trim();
+
+  if (!memberAuthId || !Number.isFinite(amount) || amount <= 0 ||
+      !['জমা','উত্তোলন'].includes(kind)) {
+    message('adminMsg', 'সদস্য, টাকার পরিমাণ ও ধরন সঠিকভাবে দিন।', true);
+    return;
+  }
+
+  busy('transactionBtn', true);
+  message('adminMsg', 'লেনদেন সংরক্ষণ হচ্ছে...');
+
+  try {
+    const {error} = await supabaseClient
+      .from('transactions')
+      .insert({
+        member_id: memberAuthId,
+        amount,
+        transaction_type: kind,
+        description: note,
+        created_by: currentUser.id
+      });
+
+    if (error) throw error;
+
+    $('amount').value = '';
+    $('kind').value = '';
+    $('note').value = '';
+
+    message('adminMsg', 'লেনদেন যোগ হয়েছে।');
+    await loadTransactions();
+
+  } catch (error) {
+    message('adminMsg', error.message || 'লেনদেন সংরক্ষণ হয়নি।', true);
+  } finally {
+    busy('transactionBtn', false);
+  }
+}
+
+async function signOut() {
+  await supabaseClient.auth.signOut();
+  currentUser = null;
+  isAdmin = false;
+
+  $('dashboard').classList.add('hidden');
+  $('admin').classList.add('hidden');
+  $('login').classList.remove('hidden');
+  $('password').value = '';
+  $('loginId').value = '';
+  message('loginMsg', '');
+}
+
+$('connectBtn').addEventListener('click', connect);
+$('loginBtn').addEventListener('click', signIn);
+$('logoutBtn').addEventListener('click', signOut);
+$('createAccountBtn').addEventListener('click', createMemberAccount);
+$('transactionBtn').addEventListener('click', addTransaction);
 </script>
 </body>
-</html>
+ </html>
+ 
