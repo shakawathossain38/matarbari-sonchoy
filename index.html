@@ -69,19 +69,22 @@ td,th{padding:9px;border-bottom:1px solid #e3eae6;text-align:left}
 
 <section class="card hidden" id="admin">
 
-<h3>অ্যাডমিন: সদস্য অ্যাকাউন্ট তৈরি</h3>
+<h3>অ্যাডমিন: নতুন সদস্য যুক্ত করুন</h3>
 
-<label>সদস্য নির্বাচন করুন</label>
-<select id="newMemberId">
-<option value="">সদস্য নির্বাচন করুন</option>
-</select>
+<label>সদস্যের নাম</label>
+<input id="newMemberName" type="text" placeholder="সম্পূর্ণ নাম">
 
-<label>অস্থায়ী পাসওয়ার্ড (কমপক্ষে ৮ অক্ষর)</label>
-<input id="newMemberPassword" type="password" minlength="8" autocomplete="new-password">
+<label>মোবাইল নম্বর</label>
+<input id="newMemberPhone" type="tel" placeholder="মোবাইল নম্বর">
 
-<button id="createAccountBtn">সদস্য অ্যাকাউন্ট তৈরি করুন</button>
+<label>ইমেইল ঠিকানা</label>
+<input id="newMemberEmail" type="email" placeholder="ইমেইল">
+
+<label>পাসওয়ার্ড (কমপক্ষে ৮ অক্ষর)</label>
+<input id="newMemberPassword" type="password" minlength="8" placeholder="পাসওয়ার্ড">
+
+<button id="createAccountBtn">নতুন সদস্য যুক্ত করুন</button>
 <small id="createMsg" class="status"></small>
-
 <hr>
 
 <h3>অ্যাডমিন: সদস্যের পাসওয়ার্ড পরিবর্তন</h3>
@@ -158,7 +161,7 @@ function busy(id,value){
 }
 
 function validMemberId(value){
-  return /^MSH(?:00[1-9]|01[0-5])$/.test(value);
+  return /^MSH(?!000)\d{3,}$/.test(value);
 }
 
 function escapeHTML(value){
@@ -298,9 +301,75 @@ async function loadTransactions(){
     return;
   }
 
-  if(!data?.length){
-    $('records').textContent='এখনো কোনো লেনদেন যোগ হয়নি।';
-    return;
+  const transactions=data || [];
+
+  if(!isAdmin){
+    const deposits=transactions.filter(
+      x=>x.transaction_type==='জমা'
+    );
+
+    const totalDeposit=deposits.reduce(
+      (sum,x)=>sum+Number(x.amount || 0),0
+    );
+
+    const monthly={};
+
+    for(const item of deposits){
+      const date=new Date(item.created_at);
+      const key=`${date.getFullYear()}-${date.getMonth()}`;
+
+      if(!monthly[key]){
+        monthly[key]={
+          label:date.toLocaleDateString('bn-BD',{
+            month:'long',
+            year:'numeric'
+          }),
+          amount:0
+        };
+      }
+
+      monthly[key].amount+=Number(item.amount || 0);
+    }
+
+    const currentDate=new Date();
+    const currentKey=`${currentDate.getFullYear()}-${currentDate.getMonth()}`;
+    const currentMonth=monthly[currentKey]?.amount || 0;
+
+    const monthlyRows=Object.values(monthly).map(x=>`
+      <tr>
+        <td>${escapeHTML(x.label)}</td>
+        <td>৳${escapeHTML(x.amount.toLocaleString('bn-BD'))}</td>
+      </tr>
+    `).join('');
+
+    $('records').innerHTML=`
+      <h3>আমার সঞ্চয়ের হিসাব</h3>
+      <p><strong>মোট জমা:</strong> ৳${totalDeposit.toLocaleString('bn-BD')}</p>
+      <p><strong>চলতি মাসের জমা:</strong> ৳${currentMonth.toLocaleString('bn-BD')}</p>
+
+      <h4>মাসভিত্তিক জমা</h4>
+      ${monthlyRows ? `
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>মাস</th><th>জমা</th></tr></thead>
+            <tbody>${monthlyRows}</tbody>
+          </table>
+        </div>
+      ` : '<p>এখনো কোনো জমা নেই।</p>'}
+      <h4>লেনদেনের বিবরণ</h4>
+      ${renderTransactionTable(transactions)}
+    `;
+  }else{
+    $('records').innerHTML=`
+      <h3>সকল সদস্যের লেনদেন</h3>
+      ${renderTransactionTable(transactions)}
+    `;
+  }
+}
+
+function renderTransactionTable(data){
+  if(!data.length){
+    return '<p>এখনো কোনো লেনদেন যোগ হয়নি।</p>';
   }
 
   const rows=data.map(x=>`
@@ -312,7 +381,7 @@ async function loadTransactions(){
     </tr>
   `).join('');
 
-  $('records').innerHTML=`
+  return `
     <div class="table-wrap">
       <table>
         <thead>
@@ -320,7 +389,8 @@ async function loadTransactions(){
         </thead>
         <tbody>${rows}</tbody>
       </table>
-    </div>`;
+    </div>
+  `;
 }
 
 async function loadAdminMembers(){
@@ -334,21 +404,14 @@ async function loadAdminMembers(){
     return;
   }
 
-  const createSelect=$('newMemberId');
   const transactionSelect=$('memberId');
   const resetSelect=$('resetMemberId');
 
-  createSelect.innerHTML='<option value="">সদস্য নির্বাচন করুন</option>';
   transactionSelect.innerHTML='<option value="">সদস্য নির্বাচন করুন</option>';
   resetSelect.innerHTML='<option value="">সদস্য নির্বাচন করুন</option>';
 
   for(const member of data || []){
-    if(!member.auth_user_id){
-      const option=document.createElement('option');
-      option.value=member.member_code;
-      option.textContent=`${member.member_code} — ${member.full_name}`;
-      createSelect.appendChild(option);
-    }else{
+    if(member.auth_user_id){
       const option=document.createElement('option');
       option.value=member.auth_user_id;
       option.textContent=`${member.member_code} — ${member.full_name}`;
@@ -368,16 +431,18 @@ async function createMemberAccount(){
     return;
   }
 
-  const userId=$('newMemberId').value;
+  const fullName=$('newMemberName').value.trim();
+  const phone=$('newMemberPhone').value.trim();
+  const email=$('newMemberEmail').value.trim();
   const password=$('newMemberPassword').value;
 
-  if(!validMemberId(userId) || password.length<8){
-    message('createMsg','সদস্য নির্বাচন করুন এবং কমপক্ষে ৮ অক্ষরের পাসওয়ার্ড দিন।',true);
+  if(!fullName || !phone || !email || password.length<8){
+    message('createMsg','সব তথ্য পূরণ করুন। পাসওয়ার্ড কমপক্ষে ৮ অক্ষরের হতে হবে।',true);
     return;
   }
 
   busy('createAccountBtn',true);
-  message('createMsg','অ্যাকাউন্ট তৈরি হচ্ছে...');
+  message('createMsg','নতুন সদস্য যুক্ত হচ্ছে...');
 
   try{
     const {data:{session}}=await supabaseClient.auth.getSession();
@@ -396,7 +461,9 @@ async function createMemberAccount(){
           'Authorization':`Bearer ${session.access_token}`
         },
         body:JSON.stringify({
-          user_id:userId,
+          full_name:fullName,
+          phone,
+          email,
           password
         })
       }
@@ -405,21 +472,25 @@ async function createMemberAccount(){
     const result=await response.json();
 
     if(!response.ok){
-      throw new Error(result.error || 'অ্যাকাউন্ট তৈরি করা যায়নি।');
+      throw new Error(result.error || 'সদস্য যুক্ত করা যায়নি।');
     }
 
+    $('newMemberName').value='';
+    $('newMemberPhone').value='';
+    $('newMemberEmail').value='';
     $('newMemberPassword').value='';
-    message('createMsg',`${userId} অ্যাকাউন্ট তৈরি হয়েছে।`);
+
+    message('createMsg',`${result.member_code} — ${result.full_name} সফলভাবে যুক্ত হয়েছে।`);
 
     await loadAdminMembers();
 
   }catch(error){
-    message('createMsg',error.message || 'অ্যাকাউন্ট তৈরি করা যায়নি।',true);
+    message('createMsg',error.message || 'সদস্য যুক্ত করা যায়নি।',true);
   }finally{
     busy('createAccountBtn',false);
   }
 }
-
+  
 async function resetMemberPassword(){
   if(!isAdmin){
     message('resetMsg','অনুমতি নেই।',true);
