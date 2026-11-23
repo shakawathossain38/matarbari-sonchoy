@@ -1,845 +1,282 @@
-
 <!DOCTYPE html>
 <html lang="bn">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>মাতারবাড়ী সঞ্চয় ও ঐক্য সংঘ</title>
-
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
 <style>
+:root{--green:#145c42;--green2:#16734f;--ink:#18372c;--muted:#718078;--bg:#f3f7f4;--line:#e4ece6;--white:#fff}
 *{box-sizing:border-box}
-body{
-  margin:0;
-  font-family:system-ui,"Noto Sans Bengali",sans-serif;
-  background:#f1f5f2;
-  color:#17352b;
-}
-header{
-  background:#145c42;
-  color:white;
-  text-align:center;
-  padding:22px 12px;
-}
-header h2{margin:0 0 6px}
-header p{margin:0;font-size:14px}
-.container{
-  width: min(100% - 24px, 850px);
-  margin:20px auto;
-}
-.card{
-  background:white;
-  padding:18px;
-  margin-bottom:16px;
-  border-radius:12px;
-  box-shadow:0 2px 10px #00000010;
-}
-h3{margin-top:0;color:#145c42}
-label{
-  display:block;
-  margin:12px 0 5px;
-  font-weight:600;
-}
-input,select,textarea,button{
-  width:100%;
-  padding:12px;
-  border:1px solid #ccd8d1;
-  border-radius:8px;
-  font:inherit;
-}
-textarea{min-height:85px;resize:vertical}
-button{
-  background:#16734f;
-  color:white;
-  border:0;
-  cursor:pointer;
-  margin-top:12px;
-  font-weight:600;
-}
-button:hover{background:#10583d}
-button.secondary{background:#52645b}
-button.danger{background:#a83232}
-.hidden{display:none!important}
-.message{margin-top:10px;font-size:14px}
-.success{color:#137442}
-.error{color:#bd2525}
-.profile-photo{
-  width:110px;height:110px;
-  object-fit:cover;border-radius:50%;
-  border:3px solid #dce9e0;
-}
-.row{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:12px;
-}
-.stat{
-  background:#e9f4ed;
-  padding:14px;
-  border-radius:10px;
-  margin:8px 0;
-}
-.stat strong{font-size:20px;display:block}
-table{width:100%;border-collapse:collapse;font-size:14px}
-th,td{padding:10px;border-bottom:1px solid #e5eae6;text-align:left}
-.table-wrap{overflow-x:auto}
-.small{font-size:13px;color:#63736a}
-.member-card{
-  border:1px solid #dce6df;
-  padding:14px;
-  border-radius:10px;
-  margin:12px 0;
-}
-footer{text-align:center;padding:20px;color:#64736b;font-size:13px}
-@media(max-width:550px){
-  .row{grid-template-columns:1fr}
-  .card{padding:14px}
-}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,"Noto Sans Bengali",sans-serif;padding-bottom:78px}
+header{background:linear-gradient(135deg,#104c37,#1b7652);color:#fff;padding:20px 16px 24px;text-align:center}
+header h2{margin:0;font-size:21px}header p{margin:5px 0 0;font-size:13px;opacity:.9}
+.container{width:min(100% - 24px,920px);margin:18px auto}
+.card{background:#fff;border:1px solid var(--line);padding:17px;margin-bottom:14px;border-radius:17px;box-shadow:0 5px 18px #173d2b0b}
+h3{margin:0 0 14px;color:var(--green);font-size:18px}
+h4{margin:8px 0;color:var(--ink)}
+label{display:block;margin:12px 0 5px;font-weight:600;font-size:14px}
+input,select,textarea,button{width:100%;padding:12px;border:1px solid #d5e0d8;border-radius:10px;font:inherit;background:#fff;color:var(--ink)}
+textarea{min-height:78px;resize:vertical}
+button{background:var(--green2);color:#fff;border:0;cursor:pointer;margin-top:12px;font-weight:650}
+button:disabled{opacity:.6;cursor:wait}
+button.secondary{background:#62746a}button.danger{background:#a83232}button.light{background:#eaf4ed;color:var(--green)}
+.hidden{display:none!important}.message{font-size:13px;margin:9px 0 0}.success{color:#137442}.error{color:#bd2525}.small{font-size:12px;color:var(--muted)}
+.profile-head{display:flex;align-items:center;gap:14px}
+.profile-photo{width:84px;height:84px;object-fit:cover;border-radius:50%;border:3px solid #e2eee5;background:#edf4ef}
+.profile-photo.large{width:104px;height:104px}
+.profile-meta{min-width:0}.profile-meta h3{margin:0 0 5px}.profile-meta p{margin:3px 0;color:var(--muted);font-size:13px}
+.menu-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.menu-item{background:#f5faf6;border:1px solid #e2eee5;border-radius:14px;padding:14px 7px;text-align:center;cursor:pointer;color:var(--green);font-weight:650;font-size:13px}
+.menu-item .ico{font-size:25px;display:block;margin-bottom:5px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.stat{background:#edf6ef;padding:14px;border-radius:13px;min-width:0}
+.stat span{display:block;font-size:12px;color:#61776a}.stat strong{display:block;font-size:18px;margin-top:5px;overflow-wrap:anywhere}
+.table-wrap{overflow-x:auto}table{width:100%;border-collapse:collapse;font-size:13px;min-width:490px}th,td{padding:10px;border-bottom:1px solid var(--line);text-align:left}th{color:var(--green);background:#f6faf7}
+.member-card{border:1px solid var(--line);padding:14px;border-radius:14px;margin:11px 0;background:#fff}
+.member-card-top{display:flex;align-items:center;gap:12px}.member-card-top .profile-photo{width:62px;height:62px}
+.member-card p{font-size:13px;margin:6px 0;color:#53665b;overflow-wrap:anywhere}
+.member-card button{width:auto;padding:9px 15px;margin:8px 6px 0 0;font-size:13px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
+.section-title{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.section-title button{width:auto;margin:0;padding:8px 12px}
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--line);display:flex;justify-content:space-around;padding:8px 4px calc(8px + env(safe-area-inset-bottom));z-index:10}
+.bottom-nav button{background:transparent;color:#607268;margin:0;padding:5px 8px;font-size:12px;width:auto;min-width:70px}
+.bottom-nav button span{display:block;font-size:19px}.bottom-nav button.active{color:var(--green);font-weight:800}
+footer{text-align:center;padding:20px;color:var(--muted);font-size:12px}
+@media(max-width:560px){.container{width:min(100% - 18px,920px);margin:12px auto}.card{padding:14px;border-radius:15px}.stats{gap:7px}.stat{padding:11px 8px}.stat strong{font-size:15px}.menu-grid{gap:8px}.menu-item{font-size:12px;padding:12px 4px}.form-grid{grid-template-columns:1fr}.profile-head{align-items:flex-start}}
 </style>
 </head>
-
 <body>
+<header><h2>মাতারবাড়ী সঞ্চয় ও ঐক্য সংঘ</h2><p>সঞ্চয়, ঐক্য ও সহযোগিতার বন্ধন</p></header>
+<main class="container">
+<section class="card" id="login">
+<h3>সদস্য লগইন</h3>
+<label>সদস্য আইডি অথবা অ্যাডমিন ইমেইল</label><input id="loginId" placeholder="যেমন: MSH001" autocomplete="username">
+<label>পাসওয়ার্ড</label><input id="password" type="password" placeholder="পাসওয়ার্ড" autocomplete="current-password">
+<button id="loginBtn">লগইন</button><p id="loginMsg" class="message"></p>
+</section>
 
-<header>
-  <h2>মাতারবাড়ী সঞ্চয় ও ঐক্য সংঘ</h2>
-  <p>সঞ্চয়, ঐক্য ও সহযোগিতার বন্ধন</p>
-</header>
-
-<div class="container">
-
-  <!-- LOGIN -->
-  <section class="card" id="login">
-    <h3>সদস্য লগইন</h3>
-
-    <label>সদস্য আইডি অথবা অ্যাডমিন ইমেইল</label>
-    <input id="loginId" placeholder="যেমন: MSH001">
-
-    <label>পাসওয়ার্ড</label>
-    <input id="password" type="password" placeholder="পাসওয়ার্ড">
-<button id="loginBtn">লগইন</button>
-    <p id="loginMsg" class="message"></p>
-  </section>
-
-  <!-- DASHBOARD -->
-  <section id="dashboard" class="hidden">
-
-    <div class="card">
-      <h3 id="welcome">স্বাগতম</h3>
-      <button class="secondary" id="logoutBtn">লগআউট</button>
-    </div>
-
-    <!-- MEMBER PROFILE -->
-    <section id="memberProfileArea" class="card hidden">
-
-      <div id="memberProfileView" class="hidden">
-        <h3>আমার সদস্য প্রোফাইল</h3>
-        <div id="memberProfileDetails"></div>
-      </div>
-
-      <div id="memberProfileForm" class="hidden">
-        <h3>সদস্য প্রোফাইল তৈরি করুন</h3>
-
-        <label>প্রোফাইল ছবি</label>
-        <input type="file" id="profilePhoto" accept="image/jpeg,image/png,image/webp">
-
-        <label>সম্পূর্ণ নাম</label>
-        <input id="profileFullName" type="text">
-
-        <label>পিতার নাম</label>
-        <input id="fatherName" type="text">
-
-        <label>মাতার নাম</label>
-        <input id="motherName" type="text">
-
-        <label>জন্ম তারিখ</label>
-        <input id="dateOfBirth" type="date">
-
-        <label>রক্তের গ্রুপ</label>
-        <select id="bloodGroup">
-          <option value="">নির্বাচন করুন</option>
-          <option>A+</option><option>A-</option>
-          <option>B+</option><option>B-</option>
-          <option>AB+</option><option>AB-</option>
-          <option>O+</option><option>O-</option>
-        </select>
-
-        <label>মোবাইল নম্বর</label>
-        <input id="profilePhone" type="tel">
-
-        <label>ঠিকানা</label>
-        <textarea id="profileAddress"></textarea>
-
-        <label>শিক্ষাগত যোগ্যতা</label>
-        <input id="profileEducation">
-
-        <label>পেশা</label>
-        <input id="profileOccupation">
-
-        <label>নিজের সম্পর্কে</label>
-        <textarea id="profileAbout"></textarea>
-
-        <button id="saveMemberProfile">প্রোফাইল সংরক্ষণ</button>
-        <p id="profileMessage" class="message"></p>
-      </div>
-    </section>
-
-    <!-- MEMBER ACCOUNT -->
-    <section class="card">
-      <h3>আমার সঞ্চয়ের হিসাব</h3>
-      <div class="stat">
-        মোট জমা
-        <strong id="totalDeposit">৳ ০</strong>
-      </div>
-      <div class="stat">
-        মোট উত্তোলন
-        <strong id="totalWithdraw">৳ ০</strong>
-      </div>
-      <div class="stat">
-        বর্তমান ব্যালেন্স
-        <strong id="balance">৳ ০</strong>
-      </div>
-    </section>
-
-    <section class="card">
-      <h3>লেনদেনের বিবরণ</h3>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>তারিখ</th>
-              <th>ধরন</th>
-              <th>পরিমাণ</th>
-              <th>বিবরণ</th>
-            </tr>
-          </thead>
-          <tbody id="records"></tbody>
-        </table>
-      </div>
-    </section>
-
-    <!-- ADMIN -->
-    <section id="admin" class="hidden">
-
-      <div class="card">
-        <h3>অ্যাডমিন: সদস্য অ্যাকাউন্ট তৈরি</h3>
-
-        <label>সদস্যের নাম</label>
-        <input id="newMemberName">
-
-        <label>মোবাইল নম্বর</label>
-        <input id="newMemberPhone" type="tel">
-
-        <label>ইমেইল ঠিকানা (ঐচ্ছিক)</label>
-        <input id="newMemberEmail" type="email">
-
-        <label>সদস্য আইডি</label>
-        <input id="newMemberCode" placeholder="যেমন: MSH013">
-
-        <label>পাসওয়ার্ড</label>
-        <input id="newMemberPassword" type="password">
-
-        <button id="createAccountBtn">অ্যাকাউন্ট তৈরি করুন</button>
-        <p id="createMsg" class="message"></p>
-      </div>
-
-      <div class="card">
-        <h3>সদস্যের পাসওয়ার্ড রিসেট</h3>
-        <label>সদস্য নির্বাচন</label>
-        <select id="resetMemberId"></select>
-
-        <label>নতুন পাসওয়ার্ড</label>
-        <input id="resetPassword" type="password">
-
-        <button id="resetPasswordBtn">পাসওয়ার্ড পরিবর্তন</button>
-        <p id="resetMsg" class="message"></p>
-      </div>
-
-      <div class="card">
-        <h3>সদস্যের জমা/উত্তোলন যোগ করুন</h3>
-
-        <label>সদস্য নির্বাচন</label>
-        <select id="memberId"></select>
-
-        <label>পরিমাণ</label>
-        <input id="amount" type="number" min="1">
-
-        <label>লেনদেনের ধরন</label>
-        <select id="kind">
-          <option value="জমা">জমা</option>
-          <option value="উত্তোলন">উত্তোলন</option>
-        </select>
-
-        <label>বিবরণ</label>
-        <input id="note" placeholder="যেমন: মাসিক সঞ্চয়">
-
-        <button id="transactionBtn">লেনদেন সংরক্ষণ</button>
-        <p id="adminMsg" class="message"></p>
-      </div>
-
-      <div class="card">
-        <h3>সদস্যদের প্রোফাইল</h3>
-        <div id="adminProfiles">লোড হচ্ছে...</div>
-      </div>
-
-    </section>
-  </section>
-
+<section id="dashboard" class="hidden">
+<section class="card">
+<div class="section-title"><h3 id="welcome">স্বাগতম</h3><button class="secondary" id="logoutBtn">লগআউট</button></div>
+<div id="memberSummary" class="profile-head hidden">
+<img id="summaryPhoto" class="profile-photo" alt="সদস্যের ছবি">
+<div class="profile-meta"><h3 id="summaryName"></h3><p id="summaryCode"></p><p id="summaryPhone"></p></div>
 </div>
+</section>
 
-<footer>
-  মাতারবাড়ী সঞ্চয় ও ঐক্য সংঘ
-</footer>
+<section id="memberProfileArea" class="card hidden">
+<div id="memberProfileView" class="hidden"><div class="section-title"><h3>আমার সদস্য প্রোফাইল</h3></div><div id="memberProfileDetails"></div></div>
+<div id="memberProfileForm" class="hidden">
+<h3>সদস্য প্রোফাইল তৈরি করুন</h3>
+<label>প্রোফাইল ছবি</label><input type="file" id="profilePhoto" accept="image/jpeg,image/png,image/webp">
+<label>সম্পূর্ণ নাম</label><input id="profileFullName">
+<div class="form-grid">
+<div><label>পিতার নাম</label><input id="fatherName"></div><div><label>মাতার নাম</label><input id="motherName"></div>
+<div><label>জন্ম তারিখ</label><input id="dateOfBirth" type="date"></div><div><label>রক্তের গ্রুপ</label><select id="bloodGroup"><option value="">নির্বাচন করুন</option><option>A+</option><option>A-</option><option>B+</option><option>B-</option><option>AB+</option><option>AB-</option><option>O+</option><option>O-</option></select></div>
+<div><label>মোবাইল নম্বর</label><input id="profilePhone" type="tel"></div><div><label>শিক্ষাগত যোগ্যতা</label><input id="profileEducation"></div>
+<div><label>পেশা</label><input id="profileOccupation"></div><div><label>ঠিকানা</label><input id="profileAddress"></div>
+</div>
+<label>নিজের সম্পর্কে</label><textarea id="profileAbout"></textarea>
+<button id="saveMemberProfile">প্রোফাইল সংরক্ষণ</button><p id="profileMessage" class="message"></p>
+</div>
+</section>
+
+<section class="card" id="memberMenu">
+<h3>সেবা মেনু</h3>
+<div class="menu-grid">
+<div class="menu-item" data-target="accountCard"><span class="ico">💰</span>সঞ্চয়ের হিসাব</div>
+<div class="menu-item" data-target="recordsCard"><span class="ico">📒</span>লেনদেন</div>
+<div class="menu-item" data-target="memberProfileArea"><span class="ico">👤</span>আমার প্রোফাইল</div>
+<div class="menu-item" data-target="noticeCard"><span class="ico">🔔</span>নোটিশ</div>
+<div class="menu-item" data-target="helpCard"><span class="ico">🤝</span>যোগাযোগ</div>
+<div class="menu-item" data-target="accountCard"><span class="ico">📊</span>ব্যালেন্স</div>
+</div>
+</section>
+
+<section class="card" id="accountCard">
+<h3>আমার সঞ্চয়ের হিসাব</h3>
+<div class="stats">
+<div class="stat"><span>মোট জমা</span><strong id="totalDeposit">৳ ০</strong></div>
+<div class="stat"><span>মোট উত্তোলন</span><strong id="totalWithdraw">৳ ০</strong></div>
+<div class="stat"><span>বর্তমান ব্যালেন্স</span><strong id="balance">৳ ০</strong></div>
+</div>
+</section>
+<section class="card" id="recordsCard"><h3>লেনদেনের বিবরণ</h3><div class="table-wrap"><table><thead><tr><th>তারিখ</th><th>ধরন</th><th>পরিমাণ</th><th>বিবরণ</th></tr></thead><tbody id="records"></tbody></table></div></section>
+<section class="card" id="noticeCard"><h3>নোটিশ</h3><p class="small">সংগঠনের নোটিশ এখানে প্রকাশ করা হবে।</p></section>
+<section class="card" id="helpCard"><h3>যোগাযোগ</h3><p class="small">প্রয়োজনে সংগঠনের দায়িত্বশীল ব্যক্তির সঙ্গে যোগাযোগ করুন।</p></section>
+
+<section id="admin" class="hidden">
+<div class="card"><h3>অ্যাডমিন: সদস্য অ্যাকাউন্ট তৈরি</h3>
+<label>সদস্যের নাম</label><input id="newMemberName">
+<label>মোবাইল নম্বর</label><input id="newMemberPhone" type="tel">
+<label>ইমেইল ঠিকানা (ঐচ্ছিক)</label><input id="newMemberEmail" type="email">
+<label>সদস্য আইডি</label><input id="newMemberCode" placeholder="যেমন: MSH013">
+<label>পাসওয়ার্ড</label><input id="newMemberPassword" type="password">
+<button id="createAccountBtn">অ্যাকাউন্ট তৈরি করুন</button><p id="createMsg" class="message"></p></div>
+
+<div class="card"><h3>সদস্যের পাসওয়ার্ড রিসেট</h3><label>সদস্য নির্বাচন</label><select id="resetMemberId"></select><label>নতুন পাসওয়ার্ড</label><input id="resetPassword" type="password"><button id="resetPasswordBtn">পাসওয়ার্ড পরিবর্তন</button><p id="resetMsg" class="message"></p></div>
+
+<div class="card"><h3>সদস্যের জমা/উত্তোলন যোগ করুন</h3><label>সদস্য নির্বাচন</label><select id="memberId"></select><label>পরিমাণ</label><input id="amount" type="number" min="1"><label>লেনদেনের ধরন</label><select id="kind"><option value="জমা">জমা</option><option value="উত্তোলন">উত্তোলন</option></select><label>বিবরণ</label><input id="note" placeholder="যেমন: মাসিক সঞ্চয়"><button id="transactionBtn">লেনদেন সংরক্ষণ</button><p id="adminMsg" class="message"></p></div>
+
+<div class="card"><h3>সদস্যদের প্রোফাইল সম্পাদনা</h3><div id="adminProfiles">লোড হচ্ছে...</div></div>
+<div class="card hidden" id="adminEditCard">
+<div class="section-title"><h3>সদস্যের প্রোফাইল সম্পাদনা</h3><button class="secondary" id="closeEditBtn">বন্ধ</button></div>
+<input id="editUserId" type="hidden">
+<label>প্রোফাইল ছবি পরিবর্তন</label><input id="editPhoto" type="file" accept="image/jpeg,image/png,image/webp">
+<div id="editPhotoPreview"></div>
+<label>সম্পূর্ণ নাম</label><input id="editFullName">
+<div class="form-grid">
+<div><label>পিতার নাম</label><input id="editFatherName"></div><div><label>মাতার নাম</label><input id="editMotherName"></div>
+<div><label>জন্ম তারিখ</label><input id="editDob" type="date"></div><div><label>রক্তের গ্রুপ</label><select id="editBlood"><option value="">নির্বাচন করুন</option><option>A+</option><option>A-</option><option>B+</option><option>B-</option><option>AB+</option><option>AB-</option><option>O+</option><option>O-</option></select></div>
+<div><label>মোবাইল নম্বর</label><input id="editPhone" type="tel"></div><div><label>শিক্ষাগত যোগ্যতা</label><input id="editEducation"></div>
+<div><label>পেশা</label><input id="editOccupation"></div><div><label>ঠিকানা</label><input id="editAddress"></div>
+</div>
+<label>নিজের সম্পর্কে</label><textarea id="editAbout"></textarea>
+<label>সদস্য হওয়ার তারিখ</label><input id="editJoinDate" type="date">
+<button id="saveAdminEditBtn">পরিবর্তন সংরক্ষণ</button><p id="editMessage" class="message"></p>
+</div>
+</section>
+</section>
+</main>
+<footer>মাতারবাড়ী সঞ্চয় ও ঐক্য সংঘ</footer>
+<nav id="bottomNav" class="bottom-nav hidden">
+<button class="active" data-nav="home"><span>⌂</span>হোম</button><button data-nav="notice"><span>♧</span>নোটিশ</button><button data-nav="menu"><span>☰</span>মেনু</button>
+</nav>
 
 <script>
-/* =====================================
-   SUPABASE CONFIGURATION
-===================================== */
+const SUPABASE_URL="https://bepgazqwgnulfwiljwsq.supabase.co";
+/* নিজের বর্তমান Supabase Publishable Key এখানে বসানো আছে। */
+const SUPABASE_KEY="sb_publishable_SPWLNOpT0VuH6ktRumSuZg_ZJnlYn10";
+const supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+const $=id=>document.getElementById(id);
+let currentUser=null,currentRole=null,currentProfile=null;
 
-const SUPABASE_URL = "https://bepgazqwgnulfwiljwsq.supabase.co";
-
-/* এখানে নিজের Supabase Publishable Key বসাবে */
-const SUPABASE_KEY = "sb_publishable_SPWLNOpT0VuH6ktRumSuZg_ZJnlYn10";
-
-const supabaseClient = window.supabase.createClient(
-  SUPABASE_URL,
-  SUPABASE_KEY
-);
-
-const $ = id => document.getElementById(id);
-
-let currentUser = null;
-let currentRole = null;
-let currentProfile = null;
-
-/* =====================================
-   COMMON FUNCTIONS
-===================================== */
-
-function showMessage(id, message, type="success"){
-  const element = $(id);
-  element.textContent = message;
-  element.className = "message " + type;
-}
-
-function taka(number){
-  return "৳ " + Number(number || 0).toLocaleString("bn-BD");
-}
-
-function escapeHTML(value){
-  return String(value ?? "").replace(/[&<>"']/g, char => ({
-    "&":"&amp;",
-    "<":"&lt;",
-    ">":"&gt;",
-    '"':"&quot;",
-    "'":"&#039;"
-  })[char]);
-}
-
-function validMemberId(value){
-  return /^MSH(?!000)\d{3,}$/i.test(value);
-}
-
-/* =====================================
-   LOGIN
-===================================== */
+function showMessage(id,msg,type="success"){const el=$(id);el.textContent=msg;el.className="message "+type}
+function taka(n){return "৳ "+Number(n||0).toLocaleString("bn-BD")}
+function escapeHTML(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]))}
+function validMemberId(v){return /^MSH(?!000)\d{3,}$/i.test(v)}
+function photoExt(file){return file.type==="image/png"?"png":file.type==="image/webp"?"webp":"jpg"}
+async function signedPhoto(path){if(!path)return "";const {data}=await supabaseClient.storage.from("member-photos").createSignedUrl(path,3600);return data?.signedUrl||""}
 
 async function signIn(){
-  const loginId = $("loginId").value.trim();
-  const password = $("password").value;
-
-  if(!loginId || !password){
-    showMessage("loginMsg","আইডি ও পাসওয়ার্ড দিন","error");
-    return;
-  }
-
-  $("loginBtn").disabled = true;
-
-  let email = loginId;
-
-  if(validMemberId(loginId)){
-    email = loginId.toLowerCase() + "@members.matarbari.local";
-  }
-
-  const {data,error} = await supabaseClient.auth.signInWithPassword({
-    email,
-    password
-  });
-
-  $("loginBtn").disabled = false;
-
-  if(error){
-    showMessage("loginMsg","লগইন ব্যর্থ: " + error.message,"error");
-    return;
-  }
-
-  currentUser = data.user;
-  await loadDashboard();
+ const loginId=$("loginId").value.trim(),password=$("password").value;
+ if(!loginId||!password){showMessage("loginMsg","আইডি ও পাসওয়ার্ড দিন","error");return}
+ $("loginBtn").disabled=true;let email=validMemberId(loginId)?loginId.toLowerCase()+"@members.matarbari.local":loginId;
+ try{const {data,error}=await supabaseClient.auth.signInWithPassword({email,password});if(error)throw error;currentUser=data.user;await loadDashboard()}
+ catch(e){showMessage("loginMsg","লগইন ব্যর্থ: "+e.message,"error")}
+ finally{$("loginBtn").disabled=false}
 }
-
-/* =====================================
-   INITIALIZE
-===================================== */
-
-async function initialize(){
-  const {data} = await supabaseClient.auth.getSession();
-
-  if(data.session){
-    currentUser = data.session.user;
-    await loadDashboard();
-  }
-}
-
-/* =====================================
-   DASHBOARD
-===================================== */
-
+async function initialize(){const {data}=await supabaseClient.auth.getSession();if(data.session){currentUser=data.session.user;await loadDashboard()}}
 async function loadDashboard(){
-  if(!currentUser) return;
-
-  $("login").classList.add("hidden");
-  $("dashboard").classList.remove("hidden");
-
-  const {data:profile,error} = await supabaseClient
-    .from("profiles")
-    .select("*")
-    .eq("id",currentUser.id)
-    .single();
-
-  if(error || !profile){
-    alert("অ্যাকাউন্ট প্রোফাইল পাওয়া যায়নি।");
-    return;
-  }
-
-  currentProfile = profile;
-  currentRole = profile.role;
-
-  $("welcome").textContent =
-    "স্বাগতম, " + (profile.full_name || currentUser.email);
-
-  if(currentRole === "admin"){
-    $("admin").classList.remove("hidden");
-    $("memberProfileArea").classList.add("hidden");
-
-    await loadAdminMembers();
-    await loadAdminProfiles();
-    await loadTransactions();
-  }else{
-    $("admin").classList.add("hidden");
-    $("memberProfileArea").classList.remove("hidden");
-
-    await loadMemberProfile();
-    await loadTransactions();
-  }
+ if(!currentUser)return;
+ const {data:profile,error}=await supabaseClient.from("profiles").select("*").eq("id",currentUser.id).single();
+ if(error||!profile){alert("অ্যাকাউন্ট প্রোফাইল পাওয়া যায়নি: "+(error?.message||""));return}
+ currentProfile=profile;currentRole=profile.role;
+ $("login").classList.add("hidden");$("dashboard").classList.remove("hidden");$("bottomNav").classList.remove("hidden");
+ $("welcome").textContent="স্বাগতম, "+(profile.full_name||currentUser.email);
+ const isAdmin=currentRole==="admin";
+ $("admin").classList.toggle("hidden",!isAdmin);
+ $("memberMenu").classList.toggle("hidden",isAdmin);
+ $("memberProfileArea").classList.toggle("hidden",isAdmin);
+ $("memberSummary").classList.toggle("hidden",isAdmin);
+ if(isAdmin){await loadAdminMembers();await loadAdminProfiles();await loadTransactions()}
+ else{await loadMemberProfile();await loadTransactions()}
 }
-
-/* =====================================
-   MEMBER PROFILE
-===================================== */
-
 async function loadMemberProfile(){
-  const {data,error} = await supabaseClient
-    .from("member_profiles")
-    .select("*")
-    .eq("user_id",currentUser.id)
-    .maybeSingle();
-
-  if(error){
-    showMessage("profileMessage",error.message,"error");
-    return;
-  }
-
-  if(data){
-    $("memberProfileForm").classList.add("hidden");
-    $("memberProfileView").classList.remove("hidden");
-
-    let photoHTML = "";
-
-    if(data.photo_path){
-      const {data:urlData} = await supabaseClient.storage
-        .from("member-photos")
-        .createSignedUrl(data.photo_path,3600);
-
-      if(urlData?.signedUrl){
-        photoHTML = `<img class="profile-photo" src="${urlData.signedUrl}" alt="প্রোফাইল ছবি">`;
-      }
-    }
-
-    $("memberProfileDetails").innerHTML = `
-      ${photoHTML}
-      <p><b>নাম:</b> ${escapeHTML(data.full_name)}</p>
-      <p><b>পিতার নাম:</b> ${escapeHTML(data.father_name)}</p>
-      <p><b>মাতার নাম:</b> ${escapeHTML(data.mother_name)}</p>
-      <p><b>জন্ম তারিখ:</b> ${escapeHTML(data.date_of_birth)}</p>
-      <p><b>রক্তের গ্রুপ:</b> ${escapeHTML(data.blood_group)}</p>
-      <p><b>মোবাইল:</b> ${escapeHTML(data.phone)}</p>
-      <p><b>ঠিকানা:</b> ${escapeHTML(data.address)}</p>
-      <p><b>শিক্ষা:</b> ${escapeHTML(data.education)}</p>
-      <p><b>পেশা:</b> ${escapeHTML(data.occupation)}</p>
-      <p><b>নিজের সম্পর্কে:</b> ${escapeHTML(data.about)}</p>
-      <p class="small">সদস্য হওয়ার তারিখ: ${escapeHTML(data.join_date)}</p>
-    `;
-  }else{
-    $("memberProfileView").classList.add("hidden");
-    $("memberProfileForm").classList.remove("hidden");
-
-    $("profileFullName").value = currentProfile.full_name || "";
-  }
+ const {data,error}=await supabaseClient.from("member_profiles").select("*").eq("user_id",currentUser.id).maybeSingle();
+ if(error){showMessage("profileMessage",error.message,"error");return}
+ if(!data){$("memberProfileView").classList.add("hidden");$("memberProfileForm").classList.remove("hidden");$("profileFullName").value=currentProfile.full_name||"";return}
+ $("memberProfileForm").classList.add("hidden");$("memberProfileView").classList.remove("hidden");
+ const photo=await signedPhoto(data.photo_path);
+ $("memberProfileDetails").innerHTML=`<div class="profile-head">${photo?`<img class="profile-photo large" src="${photo}" alt="প্রোফাইল">`:""}<div class="profile-meta"><h3>${escapeHTML(data.full_name)}</h3><p>${escapeHTML(data.phone)}</p><p>সদস্য পরিচিতি</p></div></div>
+ <p><b>পিতার নাম:</b> ${escapeHTML(data.father_name)}</p><p><b>মাতার নাম:</b> ${escapeHTML(data.mother_name)}</p><p><b>জন্ম তারিখ:</b> ${escapeHTML(data.date_of_birth)}</p><p><b>রক্তের গ্রুপ:</b> ${escapeHTML(data.blood_group)}</p><p><b>ঠিকানা:</b> ${escapeHTML(data.address)}</p><p><b>শিক্ষা:</b> ${escapeHTML(data.education)}</p><p><b>পেশা:</b> ${escapeHTML(data.occupation)}</p><p><b>নিজের সম্পর্কে:</b> ${escapeHTML(data.about)}</p><p class="small">সদস্য হওয়ার তারিখ: ${escapeHTML(data.join_date)}</p>`;
+ $("summaryName").textContent=data.full_name||"";$("summaryPhone").textContent=data.phone||"";
+ const dir=await supabaseClient.from("member_directory").select("member_code").eq("auth_user_id",currentUser.id).maybeSingle();
+ $("summaryCode").textContent=dir.data?.member_code||"সদস্য";
+ if(photo){$("summaryPhoto").src=photo;$("summaryPhoto").classList.remove("hidden")}else $("summaryPhoto").classList.add("hidden");
 }
-
 async function saveMemberProfile(){
-  const fullName = $("profileFullName").value.trim();
-
-  if(!fullName){
-    showMessage("profileMessage","নাম লিখুন","error");
-    return;
-  }
-
-  $("saveMemberProfile").disabled = true;
-  showMessage("profileMessage","প্রোফাইল সংরক্ষণ হচ্ছে...");
-
-  let photoPath = null;
-  const photo = $("profilePhoto").files[0];
-
-  if(photo){
-    const allowed = ["image/jpeg","image/png","image/webp"];
-
-    if(!allowed.includes(photo.type) || photo.size > 2*1024*1024){
-      showMessage("profileMessage","JPG, PNG অথবা WEBP ছবি দিন (সর্বোচ্চ ২ MB)","error");
-      $("saveMemberProfile").disabled = false;
-      return;
-    }
-
-    const ext = photo.type === "image/png" ? "png" :
-                photo.type === "image/webp" ? "webp" : "jpg";
-
-    photoPath = `${currentUser.id}/profile.${ext}`;
-
-    const {error:uploadError} = await supabaseClient.storage
-      .from("member-photos")
-      .upload(photoPath,photo,{upsert:false});
-
-    if(uploadError){
-      showMessage("profileMessage","ছবি আপলোড হয়নি: " + uploadError.message,"error");
-      $("saveMemberProfile").disabled = false;
-      return;
-    }
-  }
-
-  const profileData = {
-    user_id:currentUser.id,
-    full_name:fullName,
-    father_name:$("fatherName").value.trim(),
-    mother_name:$("motherName").value.trim(),
-    date_of_birth:$("dateOfBirth").value || null,
-    blood_group:$("bloodGroup").value,
-    phone:$("profilePhone").value.trim(),
-    address:$("profileAddress").value.trim(),
-    education:$("profileEducation").value.trim(),
-    occupation:$("profileOccupation").value.trim(),
-    about:$("profileAbout").value.trim(),
-    photo_path:photoPath
-  };
-
-  const {error} = await supabaseClient
-    .from("member_profiles")
-    .insert(profileData);
-
-  $("saveMemberProfile").disabled = false;
-
-  if(error){
-    showMessage("profileMessage","সংরক্ষণ ব্যর্থ: " + error.message,"error");
-    return;
-  }
-
-  showMessage("profileMessage","প্রোফাইল তৈরি হয়েছে");
-  await loadMemberProfile();
+ const fullName=$("profileFullName").value.trim();if(!fullName){showMessage("profileMessage","নাম লিখুন","error");return}
+ $("saveMemberProfile").disabled=true;let photoPath=null;const file=$("profilePhoto").files[0];
+ try{
+ if(file){if(!["image/jpeg","image/png","image/webp"].includes(file.type)||file.size>2*1024*1024)throw Error("JPG, PNG অথবা WEBP ছবি দিন (সর্বোচ্চ ২ MB)");photoPath=`${currentUser.id}/profile.${photoExt(file)}`;const {error}=await supabaseClient.storage.from("member-photos").upload(photoPath,file,{upsert:false});if(error)throw error}
+ const row={user_id:currentUser.id,full_name:fullName,father_name:$("fatherName").value.trim(),mother_name:$("motherName").value.trim(),date_of_birth:$("dateOfBirth").value||null,blood_group:$("bloodGroup").value,phone:$("profilePhone").value.trim(),address:$("profileAddress").value.trim(),education:$("profileEducation").value.trim(),occupation:$("profileOccupation").value.trim(),about:$("profileAbout").value.trim(),photo_path:photoPath};
+ const {error}=await supabaseClient.from("member_profiles").insert(row);if(error)throw error;showMessage("profileMessage","প্রোফাইল তৈরি হয়েছে");await loadMemberProfile()
+ }catch(e){showMessage("profileMessage","সংরক্ষণ ব্যর্থ: "+e.message,"error")}finally{$("saveMemberProfile").disabled=false}
 }
-
-/* =====================================
-   TRANSACTIONS
-===================================== */
-
 async function loadTransactions(){
-  let query = supabaseClient
-    .from("transactions")
-    .select("*")
-    .order("created_at",{ascending:false});
-
-  if(currentRole !== "admin"){
-    query = query.eq("member_id",currentUser.id);
-  }
-
-  const {data,error} = await query;
-
-  if(error){
-    $("records").innerHTML = `<tr><td colspan="4">তথ্য লোড হয়নি</td></tr>`;
-    return;
-  }
-
-  let deposit = 0;
-  let withdraw = 0;
-
-  $("records").innerHTML = "";
-
-  (data || []).forEach(item => {
-    const amount = Number(item.amount || 0);
-
-    if(item.type === "জমা") deposit += amount;
-    if(item.type === "উত্তোলন") withdraw += amount;
-
-    const date = item.created_at
-      ? new Date(item.created_at).toLocaleDateString("bn-BD")
-      : "";
-
-    const tr = document.createElement("tr");
-
-    [date,item.type,taka(amount),item.description || ""].forEach(value => {
-      const td = document.createElement("td");
-      td.textContent = value;
-      tr.appendChild(td);
-    });
-
-    $("records").appendChild(tr);
-  });
-
-  if(currentRole !== "admin"){
-    $("totalDeposit").textContent = taka(deposit);
-    $("totalWithdraw").textContent = taka(withdraw);
-    $("balance").textContent = taka(deposit-withdraw);
-  }
+ let q=supabaseClient.from("transactions").select("*").order("created_at",{ascending:false});if(currentRole!=="admin")q=q.eq("member_id",currentUser.id);
+ const {data,error}=await q;if(error){$("records").innerHTML="<tr><td colspan='4'>তথ্য লোড হয়নি</td></tr>";return}
+ let deposit=0,withdraw=0;$("records").innerHTML="";
+ (data||[]).forEach(item=>{let amount=Number(item.amount||0);if(item.type==="জমা")deposit+=amount;if(item.type==="উত্তোলন")withdraw+=amount;let tr=document.createElement("tr");[item.created_at?new Date(item.created_at).toLocaleDateString("bn-BD"):"",item.type,taka(amount),item.description||""].forEach(v=>{let td=document.createElement("td");td.textContent=v;tr.appendChild(td)});$("records").appendChild(tr)});
+ if(currentRole!=="admin"){$("totalDeposit").textContent=taka(deposit);$("totalWithdraw").textContent=taka(withdraw);$("balance").textContent=taka(deposit-withdraw)}
 }
-
-/* =====================================
-   ADMIN: MEMBER LIST
-===================================== */
-
 async function loadAdminMembers(){
-  const {data,error} = await supabaseClient
-    .from("member_directory")
-    .select("*")
-    .order("member_code");
-
-  if(error){
-    showMessage("adminMsg","সদস্য তালিকা লোড হয়নি: "+error.message,"error");
-    return;
-  }
-
-  $("memberId").innerHTML = '<option value="">সদস্য নির্বাচন করুন</option>';
-  $("resetMemberId").innerHTML = '<option value="">সদস্য নির্বাচন করুন</option>';
-
-  (data || []).forEach(member => {
-    const option1 = document.createElement("option");
-    option1.value = member.auth_user_id;
-    option1.textContent = member.member_code + " - " + member.full_name;
-
-    const option2 = option1.cloneNode(true);
-
-    $("memberId").appendChild(option1);
-    $("resetMemberId").appendChild(option2);
-  });
+ const {data,error}=await supabaseClient.from("member_directory").select("*").order("member_code");
+ if(error){showMessage("adminMsg","সদস্য তালিকা লোড হয়নি: "+error.message,"error");return}
+ $("memberId").innerHTML='<option value="">সদস্য নির্বাচন করুন</option>';$("resetMemberId").innerHTML='<option value="">সদস্য নির্বাচন করুন</option>';
+ (data||[]).forEach(m=>{let a=document.createElement("option");a.value=m.auth_user_id;a.textContent=m.member_code+" - "+m.full_name;$("memberId").appendChild(a);$("resetMemberId").appendChild(a.cloneNode(true))})
 }
-
-/* =====================================
-   ADMIN: CREATE ACCOUNT
-===================================== */
-
 async function createMemberAccount(){
-  const name = $("newMemberName").value.trim();
-  const phone = $("newMemberPhone").value.trim();
-  const email = $("newMemberEmail").value.trim();
-  const memberCode = $("newMemberCode").value.trim().toUpperCase();
-  const password = $("newMemberPassword").value;
-
-  if(!name || !validMemberId(memberCode) || password.length < 6){
-    showMessage("createMsg","নাম, সঠিক সদস্য আইডি এবং কমপক্ষে ৬ অক্ষরের পাসওয়ার্ড দিন","error");
-    return;
-  }
-
-  const {data:sessionData} = await supabaseClient.auth.getSession();
-  const token = sessionData.session?.access_token;
-
-  if(!token){
-    showMessage("createMsg","অ্যাডমিন লগইন পাওয়া যায়নি","error");
-    return;
-  }
-
-  const {data,error} = await supabaseClient.functions.invoke(
-    "create-member-account",
-    {
-      body:{name,phone,email,memberCode,password}
-    }
-  );
-
-  if(error){
-    showMessage("createMsg",error.message,"error");
-    return;
-  }
-
-  showMessage("createMsg",data?.message || "সদস্য অ্যাকাউন্ট তৈরি হয়েছে");
-
-  $("newMemberName").value = "";
-  $("newMemberPhone").value = "";
-  $("newMemberEmail").value = "";
-  $("newMemberCode").value = "";
-  $("newMemberPassword").value = "";
-
-  await loadAdminMembers();
+ const name=$("newMemberName").value.trim(),phone=$("newMemberPhone").value.trim(),email=$("newMemberEmail").value.trim(),memberCode=$("newMemberCode").value.trim().toUpperCase(),password=$("newMemberPassword").value;
+ if(!name||!validMemberId(memberCode)||password.length<6){showMessage("createMsg","নাম, সঠিক সদস্য আইডি এবং কমপক্ষে ৬ অক্ষরের পাসওয়ার্ড দিন","error");return}
+ try{const {data:s}=await supabaseClient.auth.getSession();if(!s.session?.access_token)throw Error("অ্যাডমিন লগইন পাওয়া যায়নি");
+ const {data,error}=await supabaseClient.functions.invoke("create-member-account",{body:{name,phone,email,memberCode,password}});if(error)throw error;
+ showMessage("createMsg",data?.message||"সদস্য অ্যাকাউন্ট তৈরি হয়েছে");["newMemberName","newMemberPhone","newMemberEmail","newMemberCode","newMemberPassword"].forEach(id=>$(id).value="");await loadAdminMembers()
+ }catch(e){showMessage("createMsg",e.message,"error")}
 }
-
-/* =====================================
-   ADMIN: RESET PASSWORD
-===================================== */
-
 async function resetMemberPassword(){
-  const memberId = $("resetMemberId").value;
-  const password = $("resetPassword").value;
-
-  if(!memberId || password.length < 6){
-    showMessage("resetMsg","সদস্য নির্বাচন করুন এবং কমপক্ষে ৬ অক্ষরের পাসওয়ার্ড দিন","error");
-    return;
-  }
-
-  const {data,error} = await supabaseClient.functions.invoke(
-    "admin-reset-member-password",
-    {
-      body:{userId:memberId,newPassword:password}
-    }
-  );
-
-  if(error){
-    showMessage("resetMsg",error.message,"error");
-    return;
-  }
-
-  showMessage("resetMsg",data?.message || "পাসওয়ার্ড পরিবর্তন হয়েছে");
-  $("resetPassword").value = "";
+ const userId=$("resetMemberId").value,password=$("resetPassword").value;if(!userId||password.length<6){showMessage("resetMsg","সদস্য নির্বাচন করুন এবং কমপক্ষে ৬ অক্ষরের পাসওয়ার্ড দিন","error");return}
+ const {data,error}=await supabaseClient.functions.invoke("admin-reset-member-password",{body:{userId,newPassword:password}});
+ if(error){showMessage("resetMsg",error.message,"error");return}
+  showMessage("resetMsg",data?.message||"পাসওয়ার্ড পরিবর্তন হয়েছে");$("resetPassword").value=""
 }
-
-/* =====================================
-   ADMIN: ADD TRANSACTION
-===================================== */
-
 async function addTransaction(){
-  const memberId = $("memberId").value;
-  const amount = Number($("amount").value);
-  const type = $("kind").value;
-  const description = $("note").value.trim();
-
-  if(!memberId || !Number.isFinite(amount) || amount <= 0){
-    showMessage("adminMsg","সদস্য ও সঠিক পরিমাণ দিন","error");
-    return;
-  }
-
-  const {error} = await supabaseClient
-    .from("transactions")
-    .insert({
-      member_id:memberId,
-      amount,
-      type,
-      description,
-      created_by:currentUser.id
-    });
-
-  if(error){
-    showMessage("adminMsg","লেনদেন সংরক্ষণ হয়নি: "+error.message,"error");
-    return;
-  }
-
-  showMessage("adminMsg","লেনদেন সংরক্ষণ হয়েছে");
-
-  $("amount").value = "";
-  $("note").value = "";
-
-  await loadTransactions();
+ const memberId=$("memberId").value,amount=Number($("amount").value),type=$("kind").value,description=$("note").value.trim();
+ if(!memberId||!Number.isFinite(amount)||amount<=0){showMessage("adminMsg","সদস্য ও সঠিক পরিমাণ দিন","error");return}
+ const {error}=await supabaseClient.from("transactions").insert({member_id:memberId,amount,type,description,created_by:currentUser.id});
+ if(error){showMessage("adminMsg","লেনদেন সংরক্ষণ হয়নি: "+error.message,"error");return}
+ showMessage("adminMsg","লেনদেন সংরক্ষণ হয়েছে");$("amount").value="";$("note").value="";await loadTransactions()
 }
-
-/* =====================================
-   ADMIN: MEMBER PROFILES
-===================================== */
-
 async function loadAdminProfiles(){
-  const area = $("adminProfiles");
-  area.textContent = "সদস্যদের প্রোফাইল লোড হচ্ছে...";
-
-  const {data:profiles,error} = await supabaseClient
-    .from("member_profiles")
-    .select("*")
-    .order("created_at",{ascending:false});
-
-  if(error){
-    area.textContent = "প্রোফাইল লোড হয়নি: " + error.message;
-    return;
-  }
-
-  if(!profiles?.length){
-    area.textContent = "কোনো সদস্য প্রোফাইল পাওয়া যায়নি।";
-    return;
-  }
-
-  area.innerHTML = "";
-
-  for(const p of profiles){
-    const card = document.createElement("div");
-    card.className = "member-card";
-
-    let photoURL = "";
-
-    if(p.photo_path){
-
-      const {data:urlData} = await supabaseClient.storage
-        .from("member-photos")
-        .createSignedUrl(p.photo_path,3600);
-
-      photoURL = urlData?.signedUrl || "";
-    }
-
-    card.innerHTML = `
-      ${photoURL ? `<img class="profile-photo" src="${photoURL}" alt="সদস্যের ছবি">` : ""}
-      <h4>${escapeHTML(p.full_name)}</h4>
-      <p>মোবাইল: ${escapeHTML(p.phone)}</p>
-      <p>ঠিকানা: ${escapeHTML(p.address)}</p>
-      <p>শিক্ষা: ${escapeHTML(p.education)}</p>
-      <p>পেশা: ${escapeHTML(p.occupation)}</p>
-    `;
-
-    area.appendChild(card);
-  }
+ const area=$("adminProfiles");area.textContent="সদস্যদের প্রোফাইল লোড হচ্ছে...";
+ const {data:profiles,error}=await supabaseClient.from("member_profiles").select("*").order("created_at",{ascending:false});
+ if(error){area.textContent="প্রোফাইল লোড হয়নি: "+error.message;return}
+ if(!profiles?.length){area.textContent="কোনো সদস্য প্রোফাইল পাওয়া যায়নি।";return}
+ area.innerHTML="";
+ for(const p of profiles){
+ const photo=await signedPhoto(p.photo_path),card=document.createElement("div");card.className="member-card";
+ card.innerHTML=`<div class="member-card-top">${photo?`<img class="profile-photo" src="${photo}" alt="সদস্যের ছবি">`:""}<div><h4>${escapeHTML(p.full_name)}</h4><p>${escapeHTML(p.phone||"মোবাইল দেওয়া নেই")}</p></div></div><p>ঠিকানা: ${escapeHTML(p.address)}</p><p>শিক্ষা: ${escapeHTML(p.education)} · পেশা: ${escapeHTML(p.occupation)}</p><button type="button" class="edit-profile-btn">✎ প্রোফাইল সম্পাদনা</button>`;
+ card.querySelector("button").addEventListener("click",()=>openAdminEdit(p,photo));area.appendChild(card)
+ }
 }
-
-/* =====================================
-   LOGOUT
-===================================== */
-
-async function signOut(){
-  await supabaseClient.auth.signOut();
-
-  currentUser = null;
-  currentRole = null;
-  currentProfile = null;
-
-  $("dashboard").classList.add("hidden");
-  $("admin").classList.add("hidden");
-  $("login").classList.remove("hidden");
-
-  $("password").value = "";
-  $("loginMsg").textContent = "";
+function openAdminEdit(p,photo){
+ $("editUserId").value=p.user_id;$("editFullName").value=p.full_name||"";$("editFatherName").value=p.father_name||"";$("editMotherName").value=p.mother_name||"";$("editDob").value=p.date_of_birth||"";$("editBlood").value=p.blood_group||"";$("editPhone").value=p.phone||"";$("editEducation").value=p.education||"";$("editOccupation").value=p.occupation||"";$("editAddress").value=p.address||"";$("editAbout").value=p.about||"";$("editJoinDate").value=p.join_date||"";
+ $("editPhoto").value="";$("editPhotoPreview").innerHTML=photo?`<img class="profile-photo" src="${photo}" alt="বর্তমান ছবি">`:"";
+ $("editMessage").textContent="";$("adminEditCard").classList.remove("hidden");$("adminEditCard").scrollIntoView({behavior:"smooth",block:"start"})
 }
+async function saveAdminProfileEdit(){
+ const userId=$("editUserId").value,fullName=$("editFullName").value.trim(),file=$("editPhoto").files[0];
+ if(!userId||!fullName){showMessage("editMessage","সদস্যের নাম প্রয়োজন","error");return}
+ $("saveAdminEditBtn").disabled=true;showMessage("editMessage","পরিবর্তন সংরক্ষণ হচ্ছে...");
+ try{
+ const {data:old,error:readError}=await supabaseClient.from("member_profiles").select("photo_path").eq("user_id",userId).single();if(readError)throw readError;
+ let photoPath=old.photo_path;
+ if(file){if(!["image/jpeg","image/png","image/webp"].includes(file.type)||file.size>2*1024*1024)throw Error("JPG, PNG অথবা WEBP ছবি দিন (সর্বোচ্চ ২ MB)");
+ photoPath=`${userId}/admin-${Date.now()}.${photoExt(file)}`;const {error}=await supabaseClient.storage.from("member-photos").upload(photoPath,file,{upsert:false});if(error)throw error}
+ const update={full_name:fullName,father_name:$("editFatherName").value.trim(),mother_name:$("editMotherName").value.trim(),date_of_birth:$("editDob").value||null,blood_group:$("editBlood").value,phone:$("editPhone").value.trim(),education:$("editEducation").value.trim(),occupation:$("editOccupation").value.trim(),address:$("editAddress").value.trim(),about:$("editAbout").value.trim(),join_date:$("editJoinDate").value||null,photo_path:photoPath,updated_at:new Date().toISOString()};
+ const {error}=await supabaseClient.from("member_profiles").update(update).eq("user_id",userId);if(error)throw error;
+ showMessage("editMessage","সদস্যের প্রোফাইল আপডেট হয়েছে");await loadAdminProfiles()
+ }catch(e){showMessage("editMessage","আপডেট হয়নি: "+e.message,"error")}finally{$("saveAdminEditBtn").disabled=false}
+}
+async function signOut(){await supabaseClient.auth.signOut();currentUser=null;currentRole=null;currentProfile=null;$("dashboard").classList.add("hidden");$("bottomNav").classList.add("hidden");$("login").classList.remove("hidden");$("password").value="";$("loginMsg").textContent=""}
 
-/* =====================================
-   EVENT LISTENERS
-===================================== */
-
-$("loginBtn").addEventListener("click",signIn);
-$("logoutBtn").addEventListener("click",signOut);
-$("saveMemberProfile").addEventListener("click",saveMemberProfile);
-$("createAccountBtn").addEventListener("click",createMemberAccount);
-$("resetPasswordBtn").addEventListener("click",resetMemberPassword);
-$("transactionBtn").addEventListener("click",addTransaction);
-
+$("loginBtn").addEventListener("click",signIn);$("logoutBtn").addEventListener("click",signOut);$("saveMemberProfile").addEventListener("click",saveMemberProfile);$("createAccountBtn").addEventListener("click",createMemberAccount);$("resetPasswordBtn").addEventListener("click",resetMemberPassword);$("transactionBtn").addEventListener("click",addTransaction);$("saveAdminEditBtn").addEventListener("click",saveAdminProfileEdit);$("closeEditBtn").addEventListener("click",()=>$("adminEditCard").classList.add("hidden"));
+document.querySelectorAll(".menu-item").forEach(item=>item.addEventListener("click",()=>{const target=$(item.dataset.target);if(target){target.scrollIntoView({behavior:"smooth",block:"start"})}}));
+document.querySelectorAll(".bottom-nav button").forEach(btn=>btn.addEventListener("click",()=>{document.querySelectorAll(".bottom-nav button").forEach(b=>b.classList.remove("active"));btn.classList.add("active");const key=btn.dataset.nav;if(key==="home")window.scrollTo({top:0,behavior:"smooth"});if(key==="notice")$("noticeCard").scrollIntoView({behavior:"smooth"});if(key==="menu")$("memberMenu").scrollIntoView({behavior:"smooth"})}));
 initialize();
-
 </script>
 </body>
 </html>
-
