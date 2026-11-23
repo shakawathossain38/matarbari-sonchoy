@@ -206,13 +206,75 @@ async function saveMemberProfile(){
  const {error}=await supabaseClient.from("member_profiles").insert(row);if(error)throw error;showMessage("profileMessage","প্রোফাইল তৈরি হয়েছে");await loadMemberProfile()
  }catch(e){showMessage("profileMessage","সংরক্ষণ ব্যর্থ: "+e.message,"error")}finally{$("saveMemberProfile").disabled=false}
 }
+
 async function loadTransactions(){
- let q=supabaseClient.from("transactions").select("*").order("created_at",{ascending:false});if(currentRole!=="admin")q=q.eq("member_id",currentUser.id);
- const {data,error}=await q;if(error){$("records").innerHTML="<tr><td colspan='4'>তথ্য লোড হয়নি</td></tr>";return}
- let deposit=0,withdraw=0;$("records").innerHTML="";
- (data||[]).forEach(item=>{let amount=Number(item.amount||0);if(item.type==="জমা")deposit+=amount;if(item.type==="উত্তোলন")withdraw+=amount;let tr=document.createElement("tr");[item.created_at?new Date(item.created_at).toLocaleDateString("bn-BD"):"",item.type,taka(amount),item.description||""].forEach(v=>{let td=document.createElement("td");td.textContent=v;tr.appendChild(td)});$("records").appendChild(tr)});
- if(currentRole!=="admin"){$("totalDeposit").textContent=taka(deposit);$("totalWithdraw").textContent=taka(withdraw);$("balance").textContent=taka(deposit-withdraw)}
+ let q = supabaseClient
+   .from("transactions")
+   .select("*")
+   .order("created_at", {ascending:false});
+
+ if(currentRole !== "admin"){
+   q = q.eq("member_id", currentUser.id);
+ }
+
+ const {data, error} = await q;
+
+ if(error){
+   $("records").innerHTML =
+     "<tr><td colspan='4'>তথ্য লোড হয়নি</td></tr>";
+   return;
+ }
+
+ let deposit = 0;
+ let withdraw = 0;
+ $("records").innerHTML = "";
+
+ (data || []).forEach(item => {
+   const amount = Number(item.amount || 0);
+
+   const rawType = String(
+     item.type || item.transaction_type || ""
+   ).trim().toLowerCase();
+
+   let displayType = item.type || item.transaction_type || "";
+
+   if(["জমা","deposit","deposited","credit"].includes(rawType)){
+     deposit += amount;
+     displayType = "জমা";
+   }
+   else if(["উত্তোলন","withdraw","withdrawal","debit"].includes(rawType)){
+     withdraw += amount;
+     displayType = "উত্তোলন";
+   }
+   else if(!rawType){
+     displayType = "ধরন দেওয়া নেই";
+   }
+
+   const tr = document.createElement("tr");
+
+   [
+     item.created_at
+       ? new Date(item.created_at).toLocaleDateString("bn-BD")
+       : "",
+     displayType,
+     taka(amount),
+     item.description || ""
+   ].forEach(value => {
+     const td = document.createElement("td");
+     td.textContent = value;
+     tr.appendChild(td);
+   });
+
+   $("records").appendChild(tr);
+ });
+
+ if(currentRole !== "admin"){
+   $("totalDeposit").textContent = taka(deposit);
+   $("totalWithdraw").textContent = taka(withdraw);
+   $("balance").textContent = taka(deposit - withdraw);
+ }
 }
+
 async function loadAdminMembers(){
  const {data,error}=await supabaseClient.from("member_directory").select("*").order("member_code");
  if(error){showMessage("adminMsg","সদস্য তালিকা লোড হয়নি: "+error.message,"error");return}
