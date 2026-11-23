@@ -618,6 +618,7 @@ async function loadAdminMembers(){
   }
 }
 
+
 async function loadAdminProfiles(){
   const area = $('adminProfiles');
   area.textContent = 'সদস্যদের প্রোফাইল লোড হচ্ছে...';
@@ -655,23 +656,118 @@ async function loadAdminProfiles(){
   for(const p of profiles){
     const member = memberMap.get(p.user_id);
     const card = document.createElement('div');
-
     card.className = 'card';
 
     card.innerHTML = `
       <h4>${escapeHTML(member?.member_code || '')} — ${escapeHTML(p.full_name || '')}</h4>
-      <p><strong>পিতার নাম:</strong> ${escapeHTML(p.father_name || '')}</p>
-      <p><strong>মাতার নাম:</strong> ${escapeHTML(p.mother_name || '')}</p>
-      <p><strong>মোবাইল:</strong> ${escapeHTML(p.phone || '')}</p>
-      <p><strong>ঠিকানা:</strong> ${escapeHTML(p.address || '')}</p>
-      <p><strong>শিক্ষা:</strong> ${escapeHTML(p.education || '')}</p>
-      <p><strong>পেশা:</strong> ${escapeHTML(p.occupation || '')}</p>
-      <p><strong>পরিচিতি:</strong> ${escapeHTML(p.about || '')}</p>
+      <p>পিতার নাম: ${escapeHTML(p.father_name || '')}</p>
+      <p>মাতার নাম: ${escapeHTML(p.mother_name || '')}</p>
+      <p>জন্ম তারিখ: ${escapeHTML(p.date_of_birth || '')}</p>
+      <p>রক্তের গ্রুপ: ${escapeHTML(p.blood_group || '')}</p>
+      <p>মোবাইল: ${escapeHTML(p.phone || '')}</p>
+      <p>ঠিকানা: ${escapeHTML(p.address || '')}</p>
+      <p>শিক্ষা: ${escapeHTML(p.education || '')}</p>
+      <p>পেশা: ${escapeHTML(p.occupation || '')}</p>
+      <p>পরিচিতি: ${escapeHTML(p.about || '')}</p>
+      <button type="button" class="editProfileBtn">প্রোফাইল এডিট</button>
+      <div class="editProfileForm hidden"></div>
     `;
 
     area.appendChild(card);
+
+    const editBtn = card.querySelector('.editProfileBtn');
+    const formArea = card.querySelector('.editProfileForm');
+
+    editBtn.addEventListener('click', () => {
+      formArea.classList.toggle('hidden');
+
+      formArea.innerHTML = `
+        <hr>
+        <h4>সদস্যের তথ্য পরিবর্তন</h4>
+
+        <label>পূর্ণ নাম</label>
+        <input class="eFullName" value="${escapeHTML(p.full_name || '')}">
+
+        <label>পিতার নাম</label>
+        <input class="eFather" value="${escapeHTML(p.father_name || '')}">
+
+        <label>মাতার নাম</label>
+        <input class="eMother" value="${escapeHTML(p.mother_name || '')}">
+
+        <label>জন্ম তারিখ</label>
+        <input class="eDob" type="date" value="${escapeHTML(p.date_of_birth || '')}">
+
+        <label>রক্তের গ্রুপ</label>
+        <select class="eBlood">
+          <option value="">নির্বাচন করুন</option>
+          ${['A+','A-','B+','B-','AB+','AB-','O+','O-'].map(v =>
+            `<option value="${v}" ${p.blood_group === v ? 'selected' : ''}>${v}</option>`
+          ).join('')}
+        </select>
+
+        <label>মোবাইল</label>
+        <input class="ePhone" value="${escapeHTML(p.phone || '')}">
+
+        <label>ঠিকানা</label>
+        <textarea class="eAddress">${escapeHTML(p.address || '')}</textarea>
+
+        <label>শিক্ষা</label>
+        <input class="eEducation" value="${escapeHTML(p.education || '')}">
+
+        <label>পেশা</label>
+        <input class="eOccupation" value="${escapeHTML(p.occupation || '')}">
+
+        <label>পরিচিতি</label>
+        <textarea class="eAbout">${escapeHTML(p.about || '')}</textarea>
+
+        <button type="button" class="saveEditProfile">পরিবর্তন সংরক্ষণ</button>
+        <p class="editMessage"></p>
+      `;
+
+      formArea.querySelector('.saveEditProfile').addEventListener('click', async () => {
+        const btn = formArea.querySelector('.saveEditProfile');
+        const msg = formArea.querySelector('.editMessage');
+
+        const fullName = formArea.querySelector('.eFullName').value.trim();
+
+        if(!fullName){
+          msg.textContent = 'পূর্ণ নাম লিখুন।';
+          return;
+        }
+
+        btn.disabled = true;
+        msg.textContent = 'সংরক্ষণ হচ্ছে...';
+
+        const {error: updateError} = await supabaseClient
+          .from('member_profiles')
+          .update({
+            full_name: fullName,
+            father_name: formArea.querySelector('.eFather').value.trim(),
+            mother_name: formArea.querySelector('.eMother').value.trim(),
+            date_of_birth: formArea.querySelector('.eDob').value || null,
+            blood_group: formArea.querySelector('.eBlood').value,
+            phone: formArea.querySelector('.ePhone').value.trim(),
+            address: formArea.querySelector('.eAddress').value.trim(),
+            education: formArea.querySelector('.eEducation').value.trim(),
+            occupation: formArea.querySelector('.eOccupation').value.trim(),
+            about: formArea.querySelector('.eAbout').value.trim(),
+            updated_at: new Date().toISOString()
+          })
+          .eq('user_id', p.user_id);
+
+        if(updateError){
+          msg.textContent = 'সংরক্ষণ হয়নি: ' + updateError.message;
+          btn.disabled = false;
+          return;
+        }
+
+        alert('সদস্যের প্রোফাইল আপডেট হয়েছে।');
+        await loadAdminProfiles();
+      });
+    });
   }
 }
+
   
 async function createMemberAccount(){
   if(!isAdmin){
