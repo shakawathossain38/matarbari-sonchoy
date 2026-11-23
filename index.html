@@ -52,19 +52,106 @@ td,th{padding:9px;border-bottom:1px solid #e3eae6;text-align:left}
 <small id="loginMsg" class="status"></small>
 </section>
 
-<section class="card hidden" id="dashboard">
-<div class="row">
-<div>
-<h3 id="welcome">ড্যাশবোর্ড</h3>
-<small>আপনার হিসাব</small>
-</div>
-<div>
-<button id="logoutBtn">লগআউট</button>
-</div>
-</div>
 
-<h3>মাসিক সঞ্চয়: ৳২০০</h3>
-<div id="records">হিসাব লোড হচ্ছে...</div>
+<section class="card hidden" id="dashboard">
+
+  <div class="row">
+    <div>
+      <h3 id="welcome">ড্যাশবোর্ড</h3>
+      <small>আপনার হিসাব</small>
+    </div>
+    <div>
+      <button id="logoutBtn">লগআউট</button>
+    </div>
+  </div>
+
+  <h3>মাসিক সঞ্চয়: ৳২০০</h3>
+
+  <div id="memberProfileArea">
+
+    <div id="memberProfileView" class="hidden">
+      <h3>আমার সদস্য প্রোফাইল</h3>
+      <div id="memberProfileDetails"></div>
+    </div>
+
+    <div id="memberProfileForm" class="hidden">
+      <h3>সদস্য প্রোফাইল তৈরি করুন</h3>
+      <p>প্রথমবার নিজের তথ্য পূরণ করে সংরক্ষণ করুন।</p>
+
+      <label>প্রোফাইল ছবি</label>
+      <input type="file" id="profilePhoto" accept="image/jpeg,image/png,image/webp">
+
+      <label>পূর্ণ নাম</label>
+      <input id="profileFullName" type="text">
+
+      <label>পিতার নাম</label>
+      <input id="fatherName" type="text">
+
+      <label>মাতার নাম</label>
+      <input id="motherName" type="text">
+
+      <label>জন্ম তারিখ</label>
+      <input id="dateOfBirth" type="date">
+
+      <label>রক্তের গ্রুপ</label>
+      <select id="bloodGroup">
+        <option value="">নির্বাচন করুন</option>
+        <option>A+</option>
+        <option>A-</option>
+        <option>B+</option>
+        <option>B-</option>
+        <option>AB+</option>
+        <option>AB-</option>
+        <option>O+</option>
+        <option>O-</option>
+      </select>
+
+      <label>মোবাইল নম্বর</label>
+      <input id="profilePhone" type="tel">
+
+      <label>ঠিকানা</label>
+      <textarea id="profileAddress"></textarea>
+
+      <label>শিক্ষাগত যোগ্যতা</label>
+      <input id="profileEducation" type="text">
+
+      <label>পেশা</label>
+      <input id="profileOccupation" type="text">
+
+      <label>সংক্ষিপ্ত পরিচিতি</label>
+      <textarea id="profileAbout"></textarea>
+
+      <button id="saveMemberProfile">প্রোফাইল সংরক্ষণ</button>
+      <p id="profileMessage"></p>
+    </div>
+
+  </div>
+
+  <div id="records">হিসাব লোড হচ্ছে...</div>
+
+</section>
+
+
+    <label>মোবাইল নম্বর</label>
+    <input id="profilePhone" type="tel">
+
+    <label>ঠিকানা</label>
+    <textarea id="profileAddress"></textarea>
+
+    <label>শিক্ষাগত যোগ্যতা</label>
+    <input id="profileEducation" type="text">
+
+    <label>পেশা</label>
+    <input id="profileOccupation" type="text">
+
+    <label>সংক্ষিপ্ত পরিচিতি</label>
+    <textarea id="profileAbout"></textarea>
+
+    <button id="saveMemberProfile">প্রোফাইল সংরক্ষণ</button>
+    <p id="profileMessage"></p>
+  </div>
+
+</div>
 </section>
 
 <section class="card hidden" id="admin">
