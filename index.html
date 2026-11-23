@@ -337,6 +337,105 @@ async function signIn(){
   }
 }
 
+  async function loadMemberProfile(){
+  const {data,error}=await supabaseClient
+    .from('member_profiles')
+    .select('*')
+    .eq('user_id',currentUser.id)
+    .maybeSingle();
+
+  if(error){
+    message('profileMessage','প্রোফাইল লোড করা যায়নি।',true);
+    return;
+  }
+
+  if(data){
+    $('memberProfileForm').classList.add('hidden');
+    $('memberProfileView').classList.remove('hidden');
+
+    $('memberProfileDetails').innerHTML=`
+      <p><strong>নাম:</strong> ${escapeHTML(data.full_name || '')}</p>
+      <p><strong>পিতার নাম:</strong> ${escapeHTML(data.father_name || '')}</p>
+      <p><strong>মাতার নাম:</strong> ${escapeHTML(data.mother_name || '')}</p>
+      <p><strong>রক্তের গ্রুপ:</strong> ${escapeHTML(data.blood_group || '')}</p>
+      <p><strong>মোবাইল:</strong> ${escapeHTML(data.phone || '')}</p>
+      <p><strong>ঠিকানা:</strong> ${escapeHTML(data.address || '')}</p>
+      <p><strong>শিক্ষা:</strong> ${escapeHTML(data.education || '')}</p>
+      <p><strong>পেশা:</strong> ${escapeHTML(data.occupation || '')}</p>
+      <p><strong>পরিচিতি:</strong> ${escapeHTML(data.about || '')}</p>
+    `;
+  }else{
+    $('memberProfileView').classList.add('hidden');
+    $('memberProfileForm').classList.remove('hidden');
+
+    const {data:basic}=await supabaseClient
+      .from('profiles')
+      .select('full_name')
+      .eq('id',currentUser.id)
+      .maybeSingle();
+
+    $('profileFullName').value=basic?.full_name || '';
+  }
+      }
+
+  async function saveMemberProfile(){
+  const file=$('profilePhoto').files[0];
+
+  if(file && !['image/jpeg','image/png','image/webp'].includes(file.type)){
+    message('profileMessage','শুধু JPG, PNG অথবা WEBP ছবি দিন।',true);
+    return;
+  }
+
+  if(file && file.size>2*1024*1024){
+    message('profileMessage','ছবির আকার ২ MB-এর বেশি হতে পারবে না।',true);
+    return;
+  }
+
+  let photoPath=null;
+
+  if(file){
+    const ext=file.type==='image/png'?'png':
+      file.type==='image/webp'?'webp':'jpg';
+
+    photoPath=`${currentUser.id}/profile.${ext}`;
+
+    const {error:uploadError}=await supabaseClient.storage
+      .from('member-photos')
+      .upload(photoPath,file,{upsert:false});
+
+    if(uploadError){
+      message('profileMessage','ছবি আপলোড হয়নি: '+uploadError.message,true);
+      return;
+    }
+  }
+
+  const {error}=await supabaseClient
+    .from('member_profiles')
+    .insert({
+      user_id:currentUser.id,
+      full_name:$('profileFullName').value.trim(),
+      father_name:$('fatherName').value.trim(),
+      mother_name:$('motherName').value.trim(),
+      date_of_birth:$('dateOfBirth').value || null,
+      blood_group:$('bloodGroup').value,
+      phone:$('profilePhone').value.trim(),
+      address:$('profileAddress').value.trim(),
+      education:$('profileEducation').value.trim(),
+      occupation:$('profileOccupation').value.trim(),
+      about:$('profileAbout').value.trim(),
+      photo_path:photoPath
+    });
+
+  if(error){
+    message('profileMessage','সংরক্ষণ হয়নি: '+error.message,true);
+    return;
+  }
+
+  message('profileMessage','প্রোফাইল সফলভাবে সংরক্ষিত হয়েছে।');
+  await loadMemberProfile();
+  }
+  
+  
 async function loadDashboard(){
   $('login').classList.add('hidden');
   $('dashboard').classList.remove('hidden');
@@ -359,7 +458,9 @@ async function loadDashboard(){
   }
 
   isAdmin=profile.role==='admin';
-
+if(!isAdmin){
+  await loadMemberProfile();
+}
   $('welcome').textContent=
     `${profile.full_name || 'সদস্য'} — ড্যাশবোর্ড`;
 
@@ -702,7 +803,7 @@ $('logoutBtn').addEventListener('click',signOut);
 $('createAccountBtn').addEventListener('click',createMemberAccount);
 $('resetPasswordBtn').addEventListener('click',resetMemberPassword);
 $('transactionBtn').addEventListener('click',addTransaction);
-
+$('saveMemberProfile').addEventListener('click',saveMemberProfile);
 /* Start automatically */
 initialize();
 
