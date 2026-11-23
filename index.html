@@ -311,6 +311,14 @@ async function loadNoticeTicker(){
 
   ticker.textContent = data.map(n => n.title).join("  ✦  ");
 }
+
+  function showNoticeForm(){
+  const form = document.getElementById("adminNoticeForm");
+
+  if(form){
+    form.classList.toggle("hidden", currentRole !== "admin");
+  }
+  }
                                                                 
 async function saveMemberProfile(){
  const fullName=$("profileFullName").value.trim();if(!fullName){showMessage("profileMessage","নাম লিখুন","error");return}
