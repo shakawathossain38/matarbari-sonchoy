@@ -382,63 +382,206 @@ async function signIn(){
   }
       }
 
-  async function saveMemberProfile(){
-  const file=$('profilePhoto').files[0];
+async function loadAdminProfiles(){
+  const area = $('adminProfiles');
+  area.textContent = 'সদস্যদের প্রোফাইল লোড হচ্ছে...';
 
-  if(file && !['image/jpeg','image/png','image/webp'].includes(file.type)){
-    message('profileMessage','শুধু JPG, PNG অথবা WEBP ছবি দিন।',true);
-    return;
-  }
-
-  if(file && file.size>2*1024*1024){
-    message('profileMessage','ছবির আকার ২ MB-এর বেশি হতে পারবে না।',true);
-    return;
-  }
-
-  let photoPath=null;
-
-  if(file){
-    const ext=file.type==='image/png'?'png':
-      file.type==='image/webp'?'webp':'jpg';
-
-    photoPath=`${currentUser.id}/profile.${ext}`;
-
-    const {error:uploadError}=await supabaseClient.storage
-      .from('member-photos')
-      .upload(photoPath,file,{upsert:false});
-
-    if(uploadError){
-      message('profileMessage','ছবি আপলোড হয়নি: '+uploadError.message,true);
-      return;
-    }
-  }
-
-  const {error}=await supabaseClient
+  const {data: profiles, error} = await supabaseClient
     .from('member_profiles')
-    .insert({
-      user_id:currentUser.id,
-      full_name:$('profileFullName').value.trim(),
-      father_name:$('fatherName').value.trim(),
-      mother_name:$('motherName').value.trim(),
-      date_of_birth:$('dateOfBirth').value || null,
-      blood_group:$('bloodGroup').value,
-      phone:$('profilePhone').value.trim(),
-      address:$('profileAddress').value.trim(),
-      education:$('profileEducation').value.trim(),
-      occupation:$('profileOccupation').value.trim(),
-      about:$('profileAbout').value.trim(),
-      photo_path:photoPath
-    });
+    .select('*')
+    .order('created_at', {ascending: false});
 
   if(error){
-    message('profileMessage','সংরক্ষণ হয়নি: '+error.message,true);
+    area.textContent = 'প্রোফাইল লোড করা যায়নি: ' + error.message;
     return;
   }
 
-  message('profileMessage','প্রোফাইল সফলভাবে সংরক্ষিত হয়েছে।');
-  await loadMemberProfile();
+  const {data: members, error: memberError} = await supabaseClient
+    .from('member_directory')
+    .select('member_code, full_name, auth_user_id');
+
+  if(memberError){
+    area.textContent = 'সদস্যের তথ্য লোড করা যায়নি।';
+    return;
   }
-  
+
+  if(!profiles || profiles.length === 0){
+    area.textContent = 'এখনো কোনো সদস্য প্রোফাইল তৈরি করেনি।';
+    return;
+  }
+
+  const memberMap = new Map(
+    (members || []).map(m => [m.auth_user_id, m])
+  );
+
+  area.innerHTML = '';
+
+  for(const p of profiles){
+    const member = memberMap.get(p.user_id);
+    let photoUrl = '';
+
+    if(p.photo_path){
+      const {data: photoData} = await supabaseClient
+        .storage
+        .from('member-photos')
+        .createSignedUrl(p.photo_path, 3600);
+
+      photoUrl = photoData?.signedUrl || '';
+    }
+
+    const card = document.createElement('div');
+    card.className = 'card';
+
+    card.innerHTML = `
+      ${photoUrl
+        ? '<img src="' + escapeHTML(photoUrl) + '" alt="সদস্যের ছবি" style="width:110px;height:110px;object-fit:cover;border-radius:50%;">'
+        : '<p>ছবি আপলোড করা হয়নি</p>'}
+
+      <h4>${escapeHTML(member?.member_code || '')} — ${escapeHTML(p.full_name || '')}</h4>
+      <p>পিতার নাম: ${escapeHTML(p.father_name || '')}</p>
+      <p>মাতার নাম: ${escapeHTML(p.mother_name || '')}</p>
+      <p>জন্ম তারিখ: ${escapeHTML(p.date_of_birth || '')}</p>
+      <p>রক্তের গ্রুপ: ${escapeHTML(p.blood_group || '')}</p>
+      <p>মোবাইল: ${escapeHTML(p.phone || '')}</p>
+      <p>ঠিকানা: ${escapeHTML(p.address || '')}</p>
+      <p>শিক্ষা: ${escapeHTML(p.education || '')}</p>
+      <p>পেশা: ${escapeHTML(p.occupation || '')}</p>
+      <p>পরিচিতি: ${escapeHTML(p.about || '')}</p>
+
+      <button type="button" class="editProfileBtn">প্রোফাইল এডিট</button>
+      <div class="editProfileForm hidden"></div>
+    `;
+
+    area.appendChild(card);
+
+    const editBtn = card.querySelector('.editProfileBtn');
+    const formArea = card.querySelector('.editProfileForm');
+
+    editBtn.addEventListener('click', () => {
+      formArea.classList.toggle('hidden');
+
+      formArea.innerHTML = `
+        <hr>
+        <h4>সদস্যের তথ্য পরিবর্তন</h4>
+
+        <label>নতুন প্রোফাইল ছবি</label>
+        <input type="file" class="ePhoto" accept="image/jpeg,image/png,image/webp">
+
+        <label>পূর্ণ নাম</label>
+        <input class="eFullName" value="${escapeHTML(p.full_name || '')}">
+
+        <label>পিতার নাম</label>
+        <input class="eFather" value="${escapeHTML(p.father_name || '')}">
+
+        <label>মাতার নাম</label>
+        <input class="eMother" value="${escapeHTML(p.mother_name || '')}">
+
+        <label>জন্ম তারিখ</label>
+        <input class="eDob" type="date" value="${escapeHTML(p.date_of_birth || '')}">
+
+        <label>রক্তের গ্রুপ</label>
+        <select class="eBlood">
+          <option value="">নির্বাচন করুন</option>
+          ${['A+','A-','B+','B-','AB+','AB-','O+','O-'].map(v =>
+            `<option value="${v}" ${p.blood_group === v ? 'selected' : ''}>${v}</option>`
+          ).join('')}
+        </select>
+
+        <label>মোবাইল</label>
+        <input class="ePhone" value="${escapeHTML(p.phone || '')}">
+
+        <label>ঠিকানা</label>
+        <textarea class="eAddress">${escapeHTML(p.address || '')}</textarea>
+
+        <label>শিক্ষা</label>
+        <input class="eEducation" value="${escapeHTML(p.education || '')}">
+
+        <label>পেশা</label>
+        <input class="eOccupation" value="${escapeHTML(p.occupation || '')}">
+
+        <label>পরিচিতি</label>
+        <textarea class="eAbout">${escapeHTML(p.about || '')}</textarea>
+
+        <button type="button" class="saveEditProfile">পরিবর্তন সংরক্ষণ</button>
+        <p class="editMessage"></p>
+      `;
+
+      formArea.querySelector('.saveEditProfile').addEventListener('click', async () => {
+        const btn = formArea.querySelector('.saveEditProfile');
+        const msg = formArea.querySelector('.editMessage');
+
+        const fullName = formArea.querySelector('.eFullName').value.trim();
+
+        if(!fullName){
+          msg.textContent = 'পূর্ণ নাম লিখুন।';
+          return;
+        }
+
+        btn.disabled = true;
+        msg.textContent = 'সংরক্ষণ হচ্ছে...';
+
+        const photoFile = formArea.querySelector('.ePhoto').files[0];
+        let newPhotoPath = p.photo_path || '';
+
+        if(photoFile){
+          if(!['image/jpeg','image/png','image/webp'].includes(photoFile.type)){
+            msg.textContent = 'শুধু JPG, PNG অথবা WEBP ছবি দিন।';
+            btn.disabled = false;
+            return;
+          }
+
+          if(photoFile.size > 2 * 1024 * 1024){
+            msg.textContent = 'ছবির আকার ২ MB-এর বেশি হতে পারবে না।';
+            btn.disabled = false;
+            return;
+          }
+
+          const ext = photoFile.type === 'image/png' ? 'png' :
+            photoFile.type === 'image/webp' ? 'webp' : 'jpg';
+
+          newPhotoPath = `${p.user_id}/admin-${Date.now()}.${ext}`;
+
+          const {error: uploadError} = await supabaseClient.storage
+            .from('member-photos')
+            .upload(newPhotoPath, photoFile, {upsert:false});
+
+          if(uploadError){
+            msg.textContent = 'ছবি আপলোড হয়নি: ' + uploadError.message;
+            btn.disabled = false;
+            return;
+          }
+        }
+
+        const {error: updateError} = await supabaseClient
+          .from('member_profiles')
+          .update({
+            full_name: fullName,
+            photo_path: newPhotoPath || null,
+            father_name: formArea.querySelector('.eFather').value.trim(),
+            mother_name: formArea.querySelector('.eMother').value.trim(),
+            date_of_birth: formArea.querySelector('.eDob').value || null,
+            blood_group: formArea.querySelector('.eBlood').value,
+            phone: formArea.querySelector('.ePhone').value.trim(),
+            address: formArea.querySelector('.eAddress').value.trim(),
+            education: formArea.querySelector('.eEducation').value.trim(),
+            occupation: formArea.querySelector('.eOccupation').value.trim(),
+            about: formArea.querySelector('.eAbout').value.trim(),
+            updated_at: new Date().toISOString()
+          })
+          .eq('user_id', p.user_id);
+
+        if(updateError){
+          msg.textContent = 'সংরক্ষণ হয়নি: ' + updateError.message;
+          btn.disabled = false;
+          return;
+        }
+
+        alert('সদস্যের প্রোফাইল আপডেট হয়েছে।');
+        await loadAdminProfiles();
+      });
+    });
+  }
+}
   
 async function loadDashboard(){
   $('login').classList.add('hidden');
