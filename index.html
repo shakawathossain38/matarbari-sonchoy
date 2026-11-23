@@ -234,7 +234,28 @@ async function saveMemberProfile(){
 }
 
 
+
 async function loadTransactions(){
+  let membersMap = {};
+
+  if(currentRole === "admin"){
+    const {data: members, error: memberError} = await supabaseClient
+      .from("member_directory")
+      .select("auth_user_id, member_code, full_name");
+
+    if(memberError){
+      $("records").innerHTML =
+        "<tr><td colspan='6'>সদস্যের তথ্য পাওয়া যায়নি: "+
+        escapeHTML(memberError.message)+"</td></tr>";
+      return;
+    }
+
+    (members || []).forEach(m => {
+      membersMap[m.auth_user_id] =
+        m.member_code + " - " + m.full_name;
+    });
+  }
+
   let q = supabaseClient
     .from("transactions")
     .select("*")
@@ -248,7 +269,7 @@ async function loadTransactions(){
 
   if(error){
     $("records").innerHTML =
-      "<tr><td colspan='5'>তথ্য লোড হয়নি: "+
+      "<tr><td colspan='6'>তথ্য লোড হয়নি: "+
       escapeHTML(error.message)+"</td></tr>";
     return;
   }
@@ -257,6 +278,10 @@ async function loadTransactions(){
   let withdraw = 0;
 
   $("records").innerHTML = "";
+
+  $("memberHead").classList.toggle(
+    "hidden", currentRole !== "admin"
+  );
 
   $("adminActionHead").classList.toggle(
     "hidden", currentRole !== "admin"
@@ -282,6 +307,13 @@ async function loadTransactions(){
     }[type] || "অনির্ধারিত";
 
     const tr = document.createElement("tr");
+
+    if(currentRole === "admin"){
+      const memberCell = document.createElement("td");
+      memberCell.textContent =
+        membersMap[item.member_id] || "সদস্য পাওয়া যায়নি";
+      tr.appendChild(memberCell);
+    }
 
     [date, displayType, taka(amount), item.description || ""]
       .forEach(value => {
@@ -309,10 +341,11 @@ async function loadTransactions(){
     $("records").appendChild(tr);
   });
 
-  $("totalDeposit").textContent = taka(deposit);
-  $("totalWithdraw").textContent = taka(withdraw);
-  $("balance").textContent = taka(deposit-withdraw);
+  if($("totalDeposit")) $("totalDeposit").textContent = taka(deposit);
+  if($("totalWithdraw")) $("totalWithdraw").textContent = taka(withdraw);
+  if($("balance")) $("balance").textContent = taka(deposit-withdraw);
 }
+
 
 async function editTransaction(id, oldAmount, oldDescription){
   if(currentRole !== "admin") return;
