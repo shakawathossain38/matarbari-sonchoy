@@ -123,9 +123,24 @@ footer{text-align:center;padding:20px;color:var(--muted);font-size:12px}
   </div>
 </section>
 
+
 <section class="card" id="noticeCard">
-  <h3>নোটিশ</h3>
-  <p class="small">সংগঠনের নোটিশ এখানে প্রকাশ করা হবে।</p>
+  <h3>সংগঠনের নোটিশ</h3>
+
+  <div id="adminNoticeForm" class="hidden">
+    <label>নোটিশের শিরোনাম</label>
+    <input id="noticeTitle" type="text" placeholder="নোটিশের শিরোনাম লিখুন">
+
+    <label>নোটিশের বিবরণ</label>
+    <textarea id="noticeContent" rows="4" placeholder="নোটিশের বিস্তারিত লিখুন"></textarea>
+
+    <button onclick="addNotice()">নোটিশ প্রকাশ করুন</button>
+    <p id="noticeMsg" class="small"></p>
+  </div>
+
+  <div id="noticeList">
+    <p class="small">নোটিশ লোড হচ্ছে...</p>
+  </div>
 </section>
 
 <section class="card" id="helpCard">
