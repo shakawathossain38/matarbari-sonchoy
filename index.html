@@ -103,9 +103,34 @@ footer{text-align:center;padding:20px;color:var(--muted);font-size:12px}
 <div class="stat"><span>বর্তমান ব্যালেন্স</span><strong id="balance">৳ ০</strong></div>
 </div>
 </section>
-<section class="card" id="recordsCard"><h3>লেনদেনের বিবরণ</h3><div class="table-wrap"><table><thead><tr><th>তারিখ</th><th>ধরন</th><th>পরিমাণ</th><th>বিবরণ</th></tr></thead><tbody id="records"></tbody></table></div></section>
-<section class="card" id="noticeCard"><h3>নোটিশ</h3><p class="small">সংগঠনের নোটিশ এখানে প্রকাশ করা হবে।</p></section>
-<section class="card" id="helpCard"><h3>যোগাযোগ</h3><p class="small">প্রয়োজনে সংগঠনের দায়িত্বশীল ব্যক্তির সঙ্গে যোগাযোগ করুন।</p></section>
+
+<section class="card" id="recordsCard">
+  <h3>লেনদেনের বিবরণ</h3>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>তারিখ</th>
+          <th>ধরন</th>
+          <th>পরিমাণ</th>
+          <th>বিবরণ</th>
+          <th id="adminActionHead" class="hidden">অ্যাকশন</th>
+        </tr>
+      </thead>
+      <tbody id="records"></tbody>
+    </table>
+  </div>
+</section>
+
+<section class="card" id="noticeCard">
+  <h3>নোটিশ</h3>
+  <p class="small">সংগঠনের নোটিশ এখানে প্রকাশ করা হবে।</p>
+</section>
+
+<section class="card" id="helpCard">
+  <h3>যোগাযোগ</h3>
+  <p class="small">প্রয়োজনে সংগঠনের দায়িত্বশীল ব্যক্তির সঙ্গে যোগাযোগ করুন।</p>
+</section>
 
 <section id="admin" class="hidden">
 <div class="card"><h3>অ্যাডমিন: সদস্য অ্যাকাউন্ট তৈরি</h3>
@@ -222,7 +247,7 @@ async function loadTransactions(){
 
   if(error){
     $("records").innerHTML =
-      "<tr><td colspan='4'>তথ্য লোড হয়নি: "+
+      "<tr><td colspan='5'>তথ্য লোড হয়নি: "+
       escapeHTML(error.message)+"</td></tr>";
     return;
   }
@@ -232,28 +257,27 @@ async function loadTransactions(){
 
   $("records").innerHTML = "";
 
+  $("adminActionHead").classList.toggle(
+    "hidden", currentRole !== "admin"
+  );
+
   (data || []).forEach(item => {
     const amount = Number(item.amount || 0);
     const type = String(item.kind || "").trim().toLowerCase();
 
-    if(type === "deposit"){
-      deposit += amount;
-    }
-
-    if(type === "withdrawal"){
-      withdraw += amount;
-    }
+    if(type === "deposit") deposit += amount;
+    if(type === "withdrawal") withdraw += amount;
 
     const date = item.entry_date
       ? new Date(item.entry_date+"T00:00:00").toLocaleDateString("bn-BD")
       : "";
 
     const displayType = {
-      deposit: "জমা",
-      withdrawal: "উত্তোলন",
-      fee: "ফি",
-      expense: "খরচ",
-      fine: "জরিমানা"
+      deposit:"জমা",
+      withdrawal:"উত্তোলন",
+      fee:"ফি",
+      expense:"খরচ",
+      fine:"জরিমানা"
     }[type] || "অনির্ধারিত";
 
     const tr = document.createElement("tr");
@@ -265,21 +289,84 @@ async function loadTransactions(){
         tr.appendChild(td);
       });
 
+    if(currentRole === "admin"){
+      const td = document.createElement("td");
+
+      const editBtn = document.createElement("button");
+      editBtn.textContent = "সম্পাদনা";
+      editBtn.onclick = () =>
+        editTransaction(item.id, amount, item.description || "");
+
+      const deleteBtn = document.createElement("button");
+      deleteBtn.textContent = "মুছে ফেলুন";
+      deleteBtn.onclick = () => deleteTransaction(item.id);
+
+      td.append(editBtn, deleteBtn);
+      tr.appendChild(td);
+    }
+
     $("records").appendChild(tr);
   });
 
-  if($("totalDeposit")){
-    $("totalDeposit").textContent = taka(deposit);
-  }
-
-  if($("totalWithdraw")){
-    $("totalWithdraw").textContent = taka(withdraw);
-  }
-
-  if($("balance")){
-    $("balance").textContent = taka(deposit - withdraw);
-  }
+  $("totalDeposit").textContent = taka(deposit);
+  $("totalWithdraw").textContent = taka(withdraw);
+  $("balance").textContent = taka(deposit-withdraw);
 }
+
+async function editTransaction(id, oldAmount, oldDescription){
+  if(currentRole !== "admin") return;
+
+  const amountText = prompt("নতুন টাকার পরিমাণ লিখুন:", oldAmount);
+  if(amountText === null) return;
+
+  const amount = Number(amountText);
+
+  if(!Number.isFinite(amount) || amount <= 0){
+    alert("সঠিক টাকার পরিমাণ দিন");
+    return;
+  }
+
+  const description = prompt("নতুন বিবরণ লিখুন:", oldDescription);
+  if(description === null) return;
+
+  const {error} = await supabaseClient
+    .from("transactions")
+    .update({
+      amount: amount,
+      description: description
+    })
+    .eq("id", id);
+
+  if(error){
+    alert("পরিবর্তন হয়নি: "+error.message);
+    return;
+  }
+
+  alert("লেনদেন সংশোধন হয়েছে");
+  await loadTransactions();
+}
+
+async function deleteTransaction(id){
+  if(currentRole !== "admin") return;
+
+  if(!confirm("আপনি কি এই লেনদেনটি মুছে ফেলতে চান?")){
+    return;
+  }
+
+  const {error} = await supabaseClient
+    .from("transactions")
+    .delete()
+    .eq("id", id);
+
+  if(error){
+    alert("মুছে ফেলা যায়নি: "+error.message);
+    return;
+  }
+
+  alert("লেনদেন মুছে ফেলা হয়েছে");
+  await loadTransactions();
+}
+
 
 
 async function loadAdminMembers(){
