@@ -45,8 +45,55 @@ button.secondary{background:#62746a}button.danger{background:#a83232}button.ligh
 .bottom-nav button span{display:block;font-size:19px}.bottom-nav button.active{color:var(--green);font-weight:800}
 footer{text-align:center;padding:20px;color:var(--muted);font-size:12px}
 @media(max-width:560px){.container{width:min(100% - 18px,920px);margin:12px auto}.card{padding:14px;border-radius:15px}.stats{gap:7px}.stat{padding:11px 8px}.stat strong{font-size:15px}.menu-grid{gap:8px}.menu-item{font-size:12px;padding:12px 4px}.form-grid{grid-template-columns:1fr}.profile-head{align-items:flex-start}}
+.notice-ticker{
+  display:flex;
+  align-items:center;
+  background:#145c42;
+  color:white;
+  overflow:hidden;
+  height:42px;
+  margin:0;
+}
+
+.ticker-label{
+  background:#0b3829;
+  padding:12px;
+  font-weight:bold;
+  white-space:nowrap;
+  z-index:2;
+}
+
+.ticker-window{
+  flex:1;
+  overflow:hidden;
+  white-space:nowrap;
+}
+
+.ticker-text{
+  display:inline-block;
+  padding-left:100%;
+  animation:noticeScroll 18s linear infinite;
+  font-weight:500;
+}
+
+@keyframes noticeScroll{
+  from{transform:translateX(0);}
+  to{transform:translateX(-100%);}
+}
+
+.notice-ticker:hover .ticker-text{
+  animation-play-state:paused;
+}
 </style>
 </head>
+  <div class="notice-ticker">
+  <span class="ticker-label">📢 নোটিশ</span>
+  <div class="ticker-window">
+    <div id="tickerText" class="ticker-text">
+      নোটিশ লোড হচ্ছে...
+    </div>
+  </div>
+  </div>
 <body>
 <header><h2>মাতারবাড়ী সঞ্চয় ও ঐক্য সংঘ</h2><p>সঞ্চয়, ঐক্য ও সহযোগিতার বন্ধন</p></header>
 <main class="container">
