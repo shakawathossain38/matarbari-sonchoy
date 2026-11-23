@@ -269,6 +269,8 @@ async function loadDashboard(){
  $("memberMenu").classList.toggle("hidden",isAdmin);
  $("memberProfileArea").classList.toggle("hidden",isAdmin);
  $("memberSummary").classList.toggle("hidden",isAdmin);
+  showNoticeForm();
+await loadNoticeTicker();
  if(isAdmin){await loadAdminMembers();await loadAdminProfiles();await loadTransactions()}
  else{await loadMemberProfile();await loadTransactions()}
 }
