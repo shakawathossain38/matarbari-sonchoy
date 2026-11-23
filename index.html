@@ -279,11 +279,35 @@ async function createMemberAccount(){
  showMessage("createMsg",data?.message||"সদস্য অ্যাকাউন্ট তৈরি হয়েছে");["newMemberName","newMemberPhone","newMemberEmail","newMemberCode","newMemberPassword"].forEach(id=>$(id).value="");await loadAdminMembers()
  }catch(e){showMessage("createMsg",e.message,"error")}
 }
+
 async function resetMemberPassword(){
- const userId=$("resetMemberId").value,password=$("resetPassword").value;if(!userId||password.length<6){showMessage("resetMsg","সদস্য নির্বাচন করুন এবং কমপক্ষে ৬ অক্ষরের পাসওয়ার্ড দিন","error");return}
- const {data,error}=await supabaseClient.functions.invoke("admin-reset-member-password",{body:{userId,newPassword:password}});
- if(error){showMessage("resetMsg",error.message,"error");return}
-  showMessage("resetMsg",data?.message||"পাসওয়ার্ড পরিবর্তন হয়েছে");$("resetPassword").value=""
+ const userId = $("resetMemberId").value;
+ const password = $("resetPassword").value;
+
+ if(!userId || password.length < 6){
+   showMessage("resetMsg","সদস্য নির্বাচন করুন এবং কমপক্ষে ৬ অক্ষরের পাসওয়ার্ড দিন","error");
+   return;
+ }
+
+ const {data,error} = await supabaseClient.functions.invoke(
+   "admin-reset-member-password",
+   {body:{userId,newPassword:password}}
+ );
+
+ if(error){
+   let detail = error.message;
+
+   try{
+     const response = await error.context.clone().json();
+     detail = response.error || response.message || JSON.stringify(response);
+   }catch(e){}
+
+   showMessage("resetMsg","সমস্যা: "+detail,"error");
+   return;
+ }
+
+ showMessage("resetMsg",data?.message || "পাসওয়ার্ড পরিবর্তন হয়েছে");
+ $("resetPassword").value = "";
 }
 
 async function addTransaction(){
