@@ -232,7 +232,7 @@ async function loadTransactions(){
 
  (data || []).forEach(item => {
    const amount = Number(item.amount || 0);
-   const type = String(item.transaction_type || item.kind || "").trim();
+   const type = String(item.kind || "").trim();
 
    if(type === "জমা" || type.toLowerCase() === "deposit"){
      deposit += amount;
@@ -342,7 +342,7 @@ async function addTransaction(){
    .insert({
      member_id: memberId,
      entry_date: entryDate,
-     transaction_type: type,
+     kind: type,
      amount: amount,
      description: description,
      created_by: currentUser.id
