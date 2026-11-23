@@ -207,21 +207,22 @@ async function saveMemberProfile(){
  }catch(e){showMessage("profileMessage","সংরক্ষণ ব্যর্থ: "+e.message,"error")}finally{$("saveMemberProfile").disabled=false}
 }
 
+
 async function loadTransactions(){
  let q = supabaseClient
    .from("transactions")
    .select("*")
-   .order("created_at", {ascending:false});
+   .order("entry_date",{ascending:false});
 
  if(currentRole !== "admin"){
-   q = q.eq("member_id", currentUser.id);
+   q = q.eq("member_id",currentUser.id);
  }
 
- const {data, error} = await q;
+ const {data,error} = await q;
 
  if(error){
    $("records").innerHTML =
-     "<tr><td colspan='4'>তথ্য লোড হয়নি</td></tr>";
+     "<tr><td colspan='4'>তথ্য লোড হয়নি: "+escapeHTML(error.message)+"</td></tr>";
    return;
  }
 
@@ -231,35 +232,23 @@ async function loadTransactions(){
 
  (data || []).forEach(item => {
    const amount = Number(item.amount || 0);
+   const type = String(item.transaction_type || item.kind || "").trim();
 
-   const rawType = String(
-     item.type || item.transaction_type || ""
-   ).trim().toLowerCase();
-
-   let displayType = item.type || item.transaction_type || "";
-
-   if(["জমা","deposit","deposited","credit"].includes(rawType)){
+   if(type === "জমা" || type.toLowerCase() === "deposit"){
      deposit += amount;
-     displayType = "জমা";
    }
-   else if(["উত্তোলন","withdraw","withdrawal","debit"].includes(rawType)){
+
+   if(type === "উত্তোলন" || type.toLowerCase() === "withdraw"){
      withdraw += amount;
-     displayType = "উত্তোলন";
    }
-   else if(!rawType){
-     displayType = "ধরন দেওয়া নেই";
-   }
+
+   const date = item.entry_date
+     ? new Date(item.entry_date+"T00:00:00").toLocaleDateString("bn-BD")
+     : "";
 
    const tr = document.createElement("tr");
 
-   [
-     item.created_at
-       ? new Date(item.created_at).toLocaleDateString("bn-BD")
-       : "",
-     displayType,
-     taka(amount),
-     item.description || ""
-   ].forEach(value => {
+   [date,type,taka(amount),item.description || ""].forEach(value => {
      const td = document.createElement("td");
      td.textContent = value;
      tr.appendChild(td);
@@ -271,9 +260,10 @@ async function loadTransactions(){
  if(currentRole !== "admin"){
    $("totalDeposit").textContent = taka(deposit);
    $("totalWithdraw").textContent = taka(withdraw);
-   $("balance").textContent = taka(deposit - withdraw);
+   $("balance").textContent = taka(deposit-withdraw);
  }
 }
+
 
 async function loadAdminMembers(){
  const {data,error}=await supabaseClient.from("member_directory").select("*").order("member_code");
@@ -295,13 +285,48 @@ async function resetMemberPassword(){
  if(error){showMessage("resetMsg",error.message,"error");return}
   showMessage("resetMsg",data?.message||"পাসওয়ার্ড পরিবর্তন হয়েছে");$("resetPassword").value=""
 }
+
 async function addTransaction(){
- const memberId=$("memberId").value,amount=Number($("amount").value),type=$("kind").value,description=$("note").value.trim();
- if(!memberId||!Number.isFinite(amount)||amount<=0){showMessage("adminMsg","সদস্য ও সঠিক পরিমাণ দিন","error");return}
- const {error}=await supabaseClient.from("transactions").insert({member_id:memberId,amount,type,description,created_by:currentUser.id});
- if(error){showMessage("adminMsg","লেনদেন সংরক্ষণ হয়নি: "+error.message,"error");return}
- showMessage("adminMsg","লেনদেন সংরক্ষণ হয়েছে");$("amount").value="";$("note").value="";await loadTransactions()
+ const memberId = $("memberId").value;
+ const amount = Number($("amount").value);
+ const type = $("kind").value;
+ const description = $("note").value.trim();
+
+ if(!memberId || !Number.isFinite(amount) || amount <= 0){
+   showMessage("adminMsg","সদস্য ও সঠিক পরিমাণ দিন","error");
+   return;
+ }
+
+ const now = new Date();
+ const entryDate = [
+   now.getFullYear(),
+   String(now.getMonth()+1).padStart(2,"0"),
+   String(now.getDate()).padStart(2,"0")
+ ].join("-");
+
+ const {error} = await supabaseClient
+   .from("transactions")
+   .insert({
+     member_id: memberId,
+     entry_date: entryDate,
+     transaction_type: type,
+     amount: amount,
+     description: description,
+     created_by: currentUser.id
+   });
+
+ if(error){
+   showMessage("adminMsg","লেনদেন সংরক্ষণ হয়নি: "+error.message,"error");
+   return;
+ }
+
+ showMessage("adminMsg","লেনদেন সংরক্ষণ হয়েছে");
+ $("amount").value = "";
+ $("note").value = "";
+
+ await loadTransactions();
 }
+
 async function loadAdminProfiles(){
  const area=$("adminProfiles");area.textContent="সদস্যদের প্রোফাইল লোড হচ্ছে...";
  const {data:profiles,error}=await supabaseClient.from("member_profiles").select("*").order("created_at",{ascending:false});
