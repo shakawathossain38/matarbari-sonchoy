@@ -232,7 +232,9 @@ async function loadTransactions(){
 
  (data || []).forEach(item => {
    const amount = Number(item.amount || 0);
-   const type = String(item.kind || "").trim();
+if(type === "deposit") deposit += amount;
+
+if(type === "withdrawal") withdraw += amount;
 
    if(type === "জমা" || type.toLowerCase() === "deposit"){
      deposit += amount;
@@ -242,13 +244,21 @@ async function loadTransactions(){
      withdraw += amount;
    }
 
-   const date = item.entry_date
-     ? new Date(item.entry_date+"T00:00:00").toLocaleDateString("bn-BD")
-     : "";
+const date = item.entry_date
+  ? new Date(item.entry_date+"T00:00:00").toLocaleDateString("bn-BD")
+  : "";
 
-   const tr = document.createElement("tr");
+const displayType = {
+  deposit: "জমা",
+  withdrawal: "উত্তোলন",
+  fee: "ফি",
+  expense: "খরচ",
+  fine: "জরিমানা"
+}[type] || type;
 
-   [date,type,taka(amount),item.description || ""].forEach(value => {
+const tr = document.createElement("tr");
+
+[date,displayType,taka(amount),item.description || ""].forEach(value => {
      const td = document.createElement("td");
      td.textContent = value;
      tr.appendChild(td);
@@ -322,7 +332,9 @@ async function resetMemberPassword(){
 async function addTransaction(){
  const memberId = $("memberId").value;
  const amount = Number($("amount").value);
- const type = $("kind").value;
+const type = $("kind").value === "জমা"
+  ? "deposit"
+  : "withdrawal";;
  const description = $("note").value.trim();
 
  if(!memberId || !Number.isFinite(amount) || amount <= 0){
