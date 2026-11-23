@@ -655,10 +655,23 @@ async function loadAdminProfiles(){
 
   for(const p of profiles){
     const member = memberMap.get(p.user_id);
+    let photoUrl = '';
+
+if(p.photo_path){
+  const {data: photoData} = await supabaseClient
+    .storage
+    .from('member-photos')
+    .createSignedUrl(p.photo_path, 3600);
+
+  photoUrl = photoData?.signedUrl || '';
+}
     const card = document.createElement('div');
     card.className = 'card';
 
+${photoUrl ? `<img src="${photoUrl}" alt="সদস্যের ছবি" style="width:110px;height:110px;object-fit:cover;border-radius:50%;">` : '<p>ছবি আপলোড করা হয়নি</p>'}
+    
     card.innerHTML = `
+    ${photoUrl ? `DIL0
       <h4>${escapeHTML(member?.member_code || '')} — ${escapeHTML(p.full_name || '')}</h4>
       <p>পিতার নাম: ${escapeHTML(p.father_name || '')}</p>
       <p>মাতার নাম: ${escapeHTML(p.mother_name || '')}</p>
@@ -684,6 +697,12 @@ async function loadAdminProfiles(){
       formArea.innerHTML = `
         <hr>
         <h4>সদস্যের তথ্য পরিবর্তন</h4>
+      <label>নতুন প্রোফাইল ছবি</label>
+<input
+  type="file"
+  class="ePhoto"
+  accept="image/jpeg,image/png,image/webp"
+>
 
         <label>পূর্ণ নাম</label>
         <input class="eFullName" value="${escapeHTML(p.full_name || '')}">
@@ -737,6 +756,38 @@ async function loadAdminProfiles(){
 
         btn.disabled = true;
         msg.textContent = 'সংরক্ষণ হচ্ছে...';
+
+        const photoFile = formArea.querySelector('.ePhoto').files[0];
+let newPhotoPath = p.photo_path || '';
+
+if(photoFile){
+  if(!['image/jpeg','image/png','image/webp'].includes(photoFile.type)){
+    msg.textContent = 'শুধু JPG, PNG অথবা WEBP ছবি দিন।';
+    btn.disabled = false;
+    return;
+  }
+
+  if(photoFile.size > 2 * 1024 * 1024){
+    msg.textContent = 'ছবির আকার ২ MB-এর বেশি হতে পারবে না।';
+    btn.disabled = false;
+    return;
+  }
+
+  const ext = photoFile.type === 'image/png' ? 'png' :
+    photoFile.type === 'image/webp' ? 'webp' : 'jpg';
+
+  newPhotoPath = `${p.user_id}/admin-${Date.now()}.${ext}`;
+
+  const {error: uploadError} = await supabaseClient.storage
+    .from('member-photos')
+    .upload(newPhotoPath, photoFile, {upsert:false});
+
+  if(uploadError){
+    msg.textContent = 'ছবি আপলোড হয়নি: ' + uploadError.message;
+    btn.disabled = false;
+    return;
+  }
+          }
 
         const {error: updateError} = await supabaseClient
           .from('member_profiles')
