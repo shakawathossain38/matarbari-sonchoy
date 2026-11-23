@@ -209,69 +209,76 @@ async function saveMemberProfile(){
 
 
 async function loadTransactions(){
- let q = supabaseClient
-   .from("transactions")
-   .select("*")
-   .order("entry_date",{ascending:false});
+  let q = supabaseClient
+    .from("transactions")
+    .select("*")
+    .order("entry_date", {ascending:false});
 
- if(currentRole !== "admin"){
-   q = q.eq("member_id",currentUser.id);
- }
+  if(currentRole !== "admin"){
+    q = q.eq("member_id", currentUser.id);
+  }
 
- const {data,error} = await q;
+  const {data,error} = await q;
 
- if(error){
-   $("records").innerHTML =
-     "<tr><td colspan='4'>তথ্য লোড হয়নি: "+escapeHTML(error.message)+"</td></tr>";
-   return;
- }
+  if(error){
+    $("records").innerHTML =
+      "<tr><td colspan='4'>তথ্য লোড হয়নি: "+
+      escapeHTML(error.message)+"</td></tr>";
+    return;
+  }
 
- let deposit = 0;
- let withdraw = 0;
- $("records").innerHTML = "";
+  let deposit = 0;
+  let withdraw = 0;
 
- (data || []).forEach(item => {
-   const amount = Number(item.amount || 0);
-if(type === "deposit") deposit += amount;
+  $("records").innerHTML = "";
 
-if(type === "withdrawal") withdraw += amount;
+  (data || []).forEach(item => {
+    const amount = Number(item.amount || 0);
+    const type = String(item.kind || "").trim().toLowerCase();
 
-   if(type === "জমা" || type.toLowerCase() === "deposit"){
-     deposit += amount;
-   }
+    if(type === "deposit"){
+      deposit += amount;
+    }
 
-   if(type === "উত্তোলন" || type.toLowerCase() === "withdraw"){
-     withdraw += amount;
-   }
+    if(type === "withdrawal"){
+      withdraw += amount;
+    }
 
-const date = item.entry_date
-  ? new Date(item.entry_date+"T00:00:00").toLocaleDateString("bn-BD")
-  : "";
+    const date = item.entry_date
+      ? new Date(item.entry_date+"T00:00:00").toLocaleDateString("bn-BD")
+      : "";
 
-const displayType = {
-  deposit: "জমা",
-  withdrawal: "উত্তোলন",
-  fee: "ফি",
-  expense: "খরচ",
-  fine: "জরিমানা"
-}[type] || type;
+    const displayType = {
+      deposit: "জমা",
+      withdrawal: "উত্তোলন",
+      fee: "ফি",
+      expense: "খরচ",
+      fine: "জরিমানা"
+    }[type] || "অনির্ধারিত";
 
-const tr = document.createElement("tr");
+    const tr = document.createElement("tr");
 
-[date,displayType,taka(amount),item.description || ""].forEach(value => {
-     const td = document.createElement("td");
-     td.textContent = value;
-     tr.appendChild(td);
-   });
+    [date, displayType, taka(amount), item.description || ""]
+      .forEach(value => {
+        const td = document.createElement("td");
+        td.textContent = value;
+        tr.appendChild(td);
+      });
 
-   $("records").appendChild(tr);
- });
+    $("records").appendChild(tr);
+  });
 
- if(currentRole !== "admin"){
-   $("totalDeposit").textContent = taka(deposit);
-   $("totalWithdraw").textContent = taka(withdraw);
-   $("balance").textContent = taka(deposit-withdraw);
- }
+  if($("totalDeposit")){
+    $("totalDeposit").textContent = taka(deposit);
+  }
+
+  if($("totalWithdraw")){
+    $("totalWithdraw").textContent = taka(withdraw);
+  }
+
+  if($("balance")){
+    $("balance").textContent = taka(deposit - withdraw);
+  }
 }
 
 
