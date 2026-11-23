@@ -280,34 +280,43 @@ async function createMemberAccount(){
  }catch(e){showMessage("createMsg",e.message,"error")}
 }
 
+
 async function resetMemberPassword(){
- const userId = $("resetMemberId").value;
- const password = $("resetPassword").value;
+  const userId = $("resetMemberId").value;
+  const password = $("resetPassword").value;
 
- if(!userId || password.length < 6){
-   showMessage("resetMsg","সদস্য নির্বাচন করুন এবং কমপক্ষে ৬ অক্ষরের পাসওয়ার্ড দিন","error");
-   return;
- }
+  if(!userId || password.length < 6){
+    showMessage("resetMsg","সদস্য নির্বাচন করুন এবং কমপক্ষে ৬ অক্ষরের পাসওয়ার্ড দিন","error");
+    return;
+  }
 
- const {data,error} = await supabaseClient.functions.invoke(
-   "admin-reset-member-password",
-   {body:{userId,newPassword:password}}
- );
+  const selectedText =
+    $("resetMemberId").selectedOptions[0]?.textContent || "";
 
- if(error){
-   let detail = error.message;
+  const memberCode = selectedText.split(" - ")[0].trim().toUpperCase();
 
-   try{
-     const response = await error.context.clone().json();
-     detail = response.error || response.message || JSON.stringify(response);
-   }catch(e){}
+  if(!/^MSH\d{3}$/.test(memberCode)){
+    showMessage("resetMsg","সঠিক সদস্য আইডি পাওয়া যায়নি","error");
+    return;
+  }
 
-   showMessage("resetMsg","সমস্যা: "+detail,"error");
-   return;
- }
+  const {data,error} = await supabaseClient.functions.invoke(
+    "admin-reset-member-password",
+    {
+      body: {
+        member_code: memberCode,
+        password: password
+      }
+    }
+  );
 
- showMessage("resetMsg",data?.message || "পাসওয়ার্ড পরিবর্তন হয়েছে");
- $("resetPassword").value = "";
+  if(error){
+    showMessage("resetMsg","সমস্যা: "+error.message,"error");
+    return;
+  }
+
+  showMessage("resetMsg",data?.message || "পাসওয়ার্ড পরিবর্তন হয়েছে");
+  $("resetPassword").value = "";
 }
 
 async function addTransaction(){
