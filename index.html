@@ -469,9 +469,10 @@ if(!isAdmin){
     `${profile.full_name || 'সদস্য'} — ড্যাশবোর্ড`;
 
   if(isAdmin){
-    $('admin').classList.remove('hidden');
-    await loadAdminMembers();
-  }
+  $('admin').classList.remove('hidden');
+  await loadAdminMembers();
+  await loadAdminProfiles();
+}
 
   await loadTransactions();
 }
@@ -617,6 +618,61 @@ async function loadAdminMembers(){
   }
 }
 
+async function loadAdminProfiles(){
+  const area = $('adminProfiles');
+  area.textContent = 'সদস্যদের প্রোফাইল লোড হচ্ছে...';
+
+  const {data: profiles, error} = await supabaseClient
+    .from('member_profiles')
+    .select('*')
+    .order('created_at', {ascending: false});
+
+  if(error){
+    area.textContent = 'প্রোফাইল লোড করা যায়নি: ' + error.message;
+    return;
+  }
+
+  const {data: members, error: memberError} = await supabaseClient
+    .from('member_directory')
+    .select('member_code, full_name, auth_user_id');
+
+  if(memberError){
+    area.textContent = 'সদস্যের তথ্য লোড করা যায়নি।';
+    return;
+  }
+
+  if(!profiles || profiles.length === 0){
+    area.textContent = 'এখনো কোনো সদস্য প্রোফাইল তৈরি করেনি।';
+    return;
+  }
+
+  const memberMap = new Map(
+    (members || []).map(m => [m.auth_user_id, m])
+  );
+
+  area.innerHTML = '';
+
+  for(const p of profiles){
+    const member = memberMap.get(p.user_id);
+    const card = document.createElement('div');
+
+    card.className = 'card';
+
+    card.innerHTML = `
+      <h4>${escapeHTML(member?.member_code || '')} — ${escapeHTML(p.full_name || '')}</h4>
+      <p><strong>পিতার নাম:</strong> ${escapeHTML(p.father_name || '')}</p>
+      <p><strong>মাতার নাম:</strong> ${escapeHTML(p.mother_name || '')}</p>
+      <p><strong>মোবাইল:</strong> ${escapeHTML(p.phone || '')}</p>
+      <p><strong>ঠিকানা:</strong> ${escapeHTML(p.address || '')}</p>
+      <p><strong>শিক্ষা:</strong> ${escapeHTML(p.education || '')}</p>
+      <p><strong>পেশা:</strong> ${escapeHTML(p.occupation || '')}</p>
+      <p><strong>পরিচিতি:</strong> ${escapeHTML(p.about || '')}</p>
+    `;
+
+    area.appendChild(card);
+  }
+}
+  
 async function createMemberAccount(){
   if(!isAdmin){
     message('createMsg','অনুমতি নেই।',true);
