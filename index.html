@@ -786,4 +786,60 @@ async function loadAdminProfiles(){
     let photoURL = "";
 
     if(p.photo_path){
-      const {data:urlData} = await supabaseClient.sto
+
+      const {data:urlData} = await supabaseClient.storage
+        .from("member-photos")
+        .createSignedUrl(p.photo_path,3600);
+
+      photoURL = urlData?.signedUrl || "";
+    }
+
+    card.innerHTML = `
+      ${photoURL ? `<img class="profile-photo" src="${photoURL}" alt="সদস্যের ছবি">` : ""}
+      <h4>${escapeHTML(p.full_name)}</h4>
+      <p>মোবাইল: ${escapeHTML(p.phone)}</p>
+      <p>ঠিকানা: ${escapeHTML(p.address)}</p>
+      <p>শিক্ষা: ${escapeHTML(p.education)}</p>
+      <p>পেশা: ${escapeHTML(p.occupation)}</p>
+    `;
+
+    area.appendChild(card);
+  }
+}
+
+/* =====================================
+   LOGOUT
+===================================== */
+
+async function signOut(){
+  await supabaseClient.auth.signOut();
+
+  currentUser = null;
+  currentRole = null;
+  currentProfile = null;
+
+  $("dashboard").classList.add("hidden");
+  $("admin").classList.add("hidden");
+  $("login").classList.remove("hidden");
+
+  $("password").value = "";
+  $("loginMsg").textContent = "";
+}
+
+/* =====================================
+   EVENT LISTENERS
+===================================== */
+
+$("loginBtn").addEventListener("click",signIn);
+$("logoutBtn").addEventListener("click",signOut);
+$("saveMemberProfile").addEventListener("click",saveMemberProfile);
+$("createAccountBtn").addEventListener("click",createMemberAccount);
+$("resetPasswordBtn").addEventListener("click",resetMemberPassword);
+$("transactionBtn").addEventListener("click",addTransaction);
+
+initialize();
+
+</script>
+</body>
+</html>
+
