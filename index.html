@@ -285,6 +285,33 @@ async function loadMemberProfile(){
  $("summaryCode").textContent=dir.data?.member_code||"সদস্য";
  if(photo){$("summaryPhoto").src=photo;$("summaryPhoto").classList.remove("hidden")}else $("summaryPhoto").classList.add("hidden");
 }
+
+async function loadMemberProfile(){
+  // এখানে তোমার আসল সম্পূর্ণ কোড থাকবে
+}
+
+async function loadNoticeTicker(){
+  const ticker = document.getElementById("tickerText");
+  if(!ticker) return;
+
+  const {data,error} = await supabaseClient
+    .from("notices")
+    .select("title")
+    .order("created_at",{ascending:false});
+
+  if(error){
+    ticker.textContent = "নোটিশ লোড করা যায়নি";
+    return;
+  }
+
+  if(!data || data.length === 0){
+    ticker.textContent = "বর্তমানে কোনো নোটিশ নেই";
+    return;
+  }
+
+  ticker.textContent = data.map(n => n.title).join("  ✦  ");
+}
+                                                                
 async function saveMemberProfile(){
  const fullName=$("profileFullName").value.trim();if(!fullName){showMessage("profileMessage","নাম লিখুন","error");return}
  $("saveMemberProfile").disabled=true;let photoPath=null;const file=$("profilePhoto").files[0];
