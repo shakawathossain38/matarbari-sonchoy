@@ -1,1138 +1,790 @@
 
-<!doctype html>
+<!DOCTYPE html>
 <html lang="bn">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>মাতারবাড়ী সঞ্চয় ও ঐক্য সংঘ</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
 *{box-sizing:border-box}
-body{margin:0;font-family:system-ui,"Noto Sans Bengali",sans-serif;background:#f4f7f5;color:#17352b}
-header{background:#145c43;color:white;padding:24px 16px;text-align:center}
-main{max-width:850px;margin:22px auto;padding:0 14px}
-.card{background:white;padding:18px;border-radius:14px;margin:14px 0;box-shadow:0 2px 12px #0001}
-input,button,select{font:inherit;padding:11px;border:1px solid #ccd8d1;border-radius:8px;width:100%;margin:6px 0}
-button{background:#145c43;color:white;border:0;font-weight:600;cursor:pointer}
-button:disabled{opacity:.6}
-small{color:#5b6e65}
-.hidden{display:none}
-.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+body{
+  margin:0;
+  font-family:system-ui,"Noto Sans Bengali",sans-serif;
+  background:#f1f5f2;
+  color:#17352b;
+}
+header{
+  background:#145c42;
+  color:white;
+  text-align:center;
+  padding:22px 12px;
+}
+header h2{margin:0 0 6px}
+header p{margin:0;font-size:14px}
+.container{
+  width: min(100% - 24px, 850px);
+  margin:20px auto;
+}
+.card{
+  background:white;
+  padding:18px;
+  margin-bottom:16px;
+  border-radius:12px;
+  box-shadow:0 2px 10px #00000010;
+}
+h3{margin-top:0;color:#145c42}
+label{
+  display:block;
+  margin:12px 0 5px;
+  font-weight:600;
+}
+input,select,textarea,button{
+  width:100%;
+  padding:12px;
+  border:1px solid #ccd8d1;
+  border-radius:8px;
+  font:inherit;
+}
+textarea{min-height:85px;resize:vertical}
+button{
+  background:#16734f;
+  color:white;
+  border:0;
+  cursor:pointer;
+  margin-top:12px;
+  font-weight:600;
+}
+button:hover{background:#10583d}
+button.secondary{background:#52645b}
+button.danger{background:#a83232}
+.hidden{display:none!important}
+.message{margin-top:10px;font-size:14px}
+.success{color:#137442}
+.error{color:#bd2525}
+.profile-photo{
+  width:110px;height:110px;
+  object-fit:cover;border-radius:50%;
+  border:3px solid #dce9e0;
+}
+.row{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+}
+.stat{
+  background:#e9f4ed;
+  padding:14px;
+  border-radius:10px;
+  margin:8px 0;
+}
+.stat strong{font-size:20px;display:block}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{padding:10px;border-bottom:1px solid #e5eae6;text-align:left}
 .table-wrap{overflow-x:auto}
-table{width:100%;border-collapse:collapse}
-td,th{padding:9px;border-bottom:1px solid #e3eae6;text-align:left}
-.status{display:block;min-height:1.5em;margin-top:5px}
-.error{color:#a12727}
-@media(max-width:560px){.row{grid-template-columns:1fr}}
+.small{font-size:13px;color:#63736a}
+.member-card{
+  border:1px solid #dce6df;
+  padding:14px;
+  border-radius:10px;
+  margin:12px 0;
+}
+footer{text-align:center;padding:20px;color:#64736b;font-size:13px}
+@media(max-width:550px){
+  .row{grid-template-columns:1fr}
+  .card{padding:14px}
+}
 </style>
-
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 
 <body>
 
 <header>
-<h2>মাতারবাড়ী সঞ্চয় ও ঐক্য সংঘ</h2>
-<p>সঞ্চয় • ঐক্য • উন্নয়ন</p>
+  <h2>মাতারবাড়ী সঞ্চয় ও ঐক্য সংঘ</h2>
+  <p>সঞ্চয়, ঐক্য ও সহযোগিতার বন্ধন</p>
 </header>
 
-<main>
+<div class="container">
 
-<section class="card" id="login">
-<h3>লগইন</h3>
-<p>অ্যাডমিন ইমেইল অথবা সদস্যের User ID দিন।</p>
+  <!-- LOGIN -->
+  <section class="card" id="login">
+    <h3>সদস্য লগইন</h3>
 
-<label>ইমেইল / User ID</label>
-<input id="loginId" placeholder="ইমেইল অথবা MSH001" autocomplete="username">
+    <label>সদস্য আইডি অথবা অ্যাডমিন ইমেইল</label>
+    <input id="loginId" placeholder="যেমন: MSH001">
 
-<label>পাসওয়ার্ড</label>
-<input id="password" type="password" autocomplete="current-password">
+    <label>পাসওয়ার্ড</label>
+    <input id="password" type="password" placeholder="পাসওয়ার্ড">
 
-<button id="loginBtn">লগইন</button>
-<small id="loginMsg" class="status"></small>
-</section>
+    <button id="loginBtn">লগইন</button>
+    <p id="loginMsg" class="message"></p>
+  </section>
 
+  <!-- DASHBOARD -->
+  <section id="dashboard" class="hidden">
 
-<section class="card hidden" id="dashboard">
-
-  <div class="row">
-    <div>
-      <h3 id="welcome">ড্যাশবোর্ড</h3>
-      <small>আপনার হিসাব</small>
-    </div>
-    <div>
-      <button id="logoutBtn">লগআউট</button>
-    </div>
-  </div>
-
-  <h3>মাসিক সঞ্চয়: ৳২০০</h3>
-
-  <div id="memberProfileArea">
-
-    <div id="memberProfileView" class="hidden">
-      <h3>আমার সদস্য প্রোফাইল</h3>
-      <div id="memberProfileDetails"></div>
+    <div class="card">
+      <h3 id="welcome">স্বাগতম</h3>
+      <button class="secondary" id="logoutBtn">লগআউট</button>
     </div>
 
-    <div id="memberProfileForm" class="hidden">
-      <h3>সদস্য প্রোফাইল তৈরি করুন</h3>
-      <p>প্রথমবার নিজের তথ্য পূরণ করে সংরক্ষণ করুন।</p>
+    <!-- MEMBER PROFILE -->
+    <section id="memberProfileArea" class="card hidden">
 
-      <label>প্রোফাইল ছবি</label>
-      <input type="file" id="profilePhoto" accept="image/jpeg,image/png,image/webp">
+      <div id="memberProfileView" class="hidden">
+        <h3>আমার সদস্য প্রোফাইল</h3>
+        <div id="memberProfileDetails"></div>
+      </div>
 
-      <label>পূর্ণ নাম</label>
-      <input id="profileFullName" type="text">
+      <div id="memberProfileForm" class="hidden">
+        <h3>সদস্য প্রোফাইল তৈরি করুন</h3>
 
-      <label>পিতার নাম</label>
-      <input id="fatherName" type="text">
+        <label>প্রোফাইল ছবি</label>
+        <input type="file" id="profilePhoto" accept="image/jpeg,image/png,image/webp">
 
-      <label>মাতার নাম</label>
-      <input id="motherName" type="text">
+        <label>সম্পূর্ণ নাম</label>
+        <input id="profileFullName" type="text">
 
-      <label>জন্ম তারিখ</label>
-      <input id="dateOfBirth" type="date">
+        <label>পিতার নাম</label>
+        <input id="fatherName" type="text">
 
-      <label>রক্তের গ্রুপ</label>
-      <select id="bloodGroup">
-        <option value="">নির্বাচন করুন</option>
-        <option>A+</option>
-        <option>A-</option>
-        <option>B+</option>
-        <option>B-</option>
-        <option>AB+</option>
-        <option>AB-</option>
-        <option>O+</option>
-        <option>O-</option>
-      </select>
+        <label>মাতার নাম</label>
+        <input id="motherName" type="text">
 
-      <label>মোবাইল নম্বর</label>
-      <input id="profilePhone" type="tel">
+        <label>জন্ম তারিখ</label>
+        <input id="dateOfBirth" type="date">
 
-      <label>ঠিকানা</label>
-      <textarea id="profileAddress"></textarea>
+        <label>রক্তের গ্রুপ</label>
+        <select id="bloodGroup">
+          <option value="">নির্বাচন করুন</option>
+          <option>A+</option><option>A-</option>
+          <option>B+</option><option>B-</option>
+          <option>AB+</option><option>AB-</option>
+          <option>O+</option><option>O-</option>
+        </select>
 
-      <label>শিক্ষাগত যোগ্যতা</label>
-      <input id="profileEducation" type="text">
+        <label>মোবাইল নম্বর</label>
+        <input id="profilePhone" type="tel">
 
-      <label>পেশা</label>
-      <input id="profileOccupation" type="text">
+        <label>ঠিকানা</label>
+        <textarea id="profileAddress"></textarea>
 
-      <label>সংক্ষিপ্ত পরিচিতি</label>
-      <textarea id="profileAbout"></textarea>
+        <label>শিক্ষাগত যোগ্যতা</label>
+        <input id="profileEducation">
 
-      <button id="saveMemberProfile">প্রোফাইল সংরক্ষণ</button>
-      <p id="profileMessage"></p>
-    </div>
+        <label>পেশা</label>
+        <input id="profileOccupation">
 
-  </div>
+        <label>নিজের সম্পর্কে</label>
+        <textarea id="profileAbout"></textarea>
 
-  <div id="records">হিসাব লোড হচ্ছে...</div>
+        <button id="saveMemberProfile">প্রোফাইল সংরক্ষণ</button>
+        <p id="profileMessage" class="message"></p>
+      </div>
+    </section>
 
-</section>
-<section class="card hidden" id="admin">
+    <!-- MEMBER ACCOUNT -->
+    <section class="card">
+      <h3>আমার সঞ্চয়ের হিসাব</h3>
+      <div class="stat">
+        মোট জমা
+        <strong id="totalDeposit">৳ ০</strong>
+      </div>
+      <div class="stat">
+        মোট উত্তোলন
+        <strong id="totalWithdraw">৳ ০</strong>
+      </div>
+      <div class="stat">
+        বর্তমান ব্যালেন্স
+        <strong id="balance">৳ ০</strong>
+      </div>
+    </section>
 
-<h3>অ্যাডমিন: নতুন সদস্য যুক্ত করুন</h3>
+    <section class="card">
+      <h3>লেনদেনের বিবরণ</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>তারিখ</th>
+              <th>ধরন</th>
+              <th>পরিমাণ</th>
+              <th>বিবরণ</th>
+            </tr>
+          </thead>
+          <tbody id="records"></tbody>
+        </table>
+      </div>
+    </section>
 
-<label>সদস্যের নাম</label>
-<input id="newMemberName" type="text" placeholder="সম্পূর্ণ নাম">
+    <!-- ADMIN -->
+    <section id="admin" class="hidden">
 
-<label>মোবাইল নম্বর</label>
-<input id="newMemberPhone" type="tel" placeholder="মোবাইল নম্বর">
+      <div class="card">
+        <h3>অ্যাডমিন: সদস্য অ্যাকাউন্ট তৈরি</h3>
 
-<label>ইমেইল ঠিকানা</label>
-<input id="newMemberEmail" type="email" placeholder="ইমেইল">
+        <label>সদস্যের নাম</label>
+        <input id="newMemberName">
 
-<label>পাসওয়ার্ড (কমপক্ষে ৮ অক্ষর)</label>
-<input id="newMemberPassword" type="password" minlength="8" placeholder="পাসওয়ার্ড">
+        <label>মোবাইল নম্বর</label>
+        <input id="newMemberPhone" type="tel">
 
-<button id="createAccountBtn">নতুন সদস্য যুক্ত করুন</button>
-<small id="createMsg" class="status"></small>
-<hr>
+        <label>ইমেইল ঠিকানা (ঐচ্ছিক)</label>
+        <input id="newMemberEmail" type="email">
 
-<h3>অ্যাডমিন: সদস্যের পাসওয়ার্ড পরিবর্তন</h3>
+        <label>সদস্য আইডি</label>
+        <input id="newMemberCode" placeholder="যেমন: MSH013">
 
-<label>সদস্য নির্বাচন করুন</label>
-<select id="resetMemberId">
-<option value="">সদস্য নির্বাচন করুন</option>
-</select>
+        <label>পাসওয়ার্ড</label>
+        <input id="newMemberPassword" type="password">
 
-<label>নতুন পাসওয়ার্ড (কমপক্ষে ৮ অক্ষর)</label>
-<input id="resetPassword" type="password" minlength="8" autocomplete="new-password">
+        <button id="createAccountBtn">অ্যাকাউন্ট তৈরি করুন</button>
+        <p id="createMsg" class="message"></p>
+      </div>
 
-<button id="resetPasswordBtn">পাসওয়ার্ড পরিবর্তন করুন</button>
-<small id="resetMsg" class="status"></small>
+      <div class="card">
+        <h3>সদস্যের পাসওয়ার্ড রিসেট</h3>
+        <label>সদস্য নির্বাচন</label>
+        <select id="resetMemberId"></select>
 
-<hr>
-<h3>অ্যাডমিন: সদস্যদের প্রোফাইল</h3>
-<div id="adminProfiles">
-  <p>সদস্যদের প্রোফাইল লোড হচ্ছে...</p>
+        <label>নতুন পাসওয়ার্ড</label>
+        <input id="resetPassword" type="password">
+
+        <button id="resetPasswordBtn">পাসওয়ার্ড পরিবর্তন</button>
+        <p id="resetMsg" class="message"></p>
+      </div>
+
+      <div class="card">
+        <h3>সদস্যের জমা/উত্তোলন যোগ করুন</h3>
+
+        <label>সদস্য নির্বাচন</label>
+        <select id="memberId"></select>
+
+        <label>পরিমাণ</label>
+        <input id="amount" type="number" min="1">
+
+        <label>লেনদেনের ধরন</label>
+        <select id="kind">
+          <option value="জমা">জমা</option>
+          <option value="উত্তোলন">উত্তোলন</option>
+        </select>
+
+        <label>বিবরণ</label>
+        <input id="note" placeholder="যেমন: মাসিক সঞ্চয়">
+
+        <button id="transactionBtn">লেনদেন সংরক্ষণ</button>
+        <p id="adminMsg" class="message"></p>
+      </div>
+
+      <div class="card">
+        <h3>সদস্যদের প্রোফাইল</h3>
+        <div id="adminProfiles">লোড হচ্ছে...</div>
+      </div>
+
+    </section>
+  </section>
+
 </div>
 
-<h3>অ্যাডমিন: লেনদেন যোগ করুন</h3>
-
-<label>সদস্য নির্বাচন করুন</label>
-<select id="memberId">
-<option value="">সদস্য নির্বাচন করুন</option>
-</select>
-
-<div class="row">
-<div>
-<label>টাকার পরিমাণ</label>
-<input id="amount" type="number" min="0.01" step="0.01">
-</div>
-
-<div>
-<label>লেনদেনের ধরন</label>
-<select id="kind">
-<option value="">নির্বাচন করুন</option>
-<option value="জমা">জমা</option>
-<option value="উত্তোলন">উত্তোলন</option>
-</select>
-</div>
-</div>
-
-<label>বিবরণ</label>
-<input id="note" maxlength="500" placeholder="বিবরণ">
-
-<button id="transactionBtn">হিসাব সংরক্ষণ</button>
-<small id="adminMsg" class="status"></small>
-
-</section>
-
-</main>
+<footer>
+  মাতারবাড়ী সঞ্চয় ও ঐক্য সংঘ
+</footer>
 
 <script>
-'use strict';
+/* =====================================
+   SUPABASE CONFIGURATION
+===================================== */
 
-/* Supabase connection */
-const projectUrl = 'https://bepgazqwgnulfwiljwsq.supabase.co';
+const SUPABASE_URL = "https://bepgazqwgnulfwiljwsq.supabase.co";
 
-/* এখানে নিজের Publishable Key বসাবে */
-const publishableKey = 'sb_publishable_SPWLNOpT0VuH6ktRumSuZg_ZJnlYn10';
+/* এখানে নিজের Supabase Publishable Key বসাবে */
+const SUPABASE_KEY = "sb_publishable_SPWLNOpT0VuH6ktRumSuZg_ZJnlYn10";
 
-let supabaseClient = null;
-let currentUser = null;
-let isAdmin = false;
+const supabaseClient = window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
+);
 
 const $ = id => document.getElementById(id);
 
-function message(id,text,error=false){
-  const el=$(id);
-  el.textContent=text;
-  el.classList.toggle('error',error);
+let currentUser = null;
+let currentRole = null;
+let currentProfile = null;
+
+/* =====================================
+   COMMON FUNCTIONS
+===================================== */
+
+function showMessage(id, message, type="success"){
+  const element = $(id);
+  element.textContent = message;
+  element.className = "message " + type;
 }
 
-function busy(id,value){
-  $(id).disabled=value;
-}
-
-function validMemberId(value){
-  return /^MSH(?!000)\d{3,}$/.test(value);
+function taka(number){
+  return "৳ " + Number(number || 0).toLocaleString("bn-BD");
 }
 
 function escapeHTML(value){
-  return String(value ?? '').replace(/[&<>"']/g,c=>({
-    '&':'&amp;',
-    '<':'&lt;',
-    '>':'&gt;',
-    '"':'&quot;',
-    "'":'&#39;'
-  }[c]));
+  return String(value ?? "").replace(/[&<>"']/g, char => ({
+    "&":"&amp;",
+    "<":"&lt;",
+    ">":"&gt;",
+    '"':"&quot;",
+    "'":"&#039;"
+  })[char]);
 }
 
-function formatDate(value){
-  const d=new Date(value);
-  return Number.isNaN(d.getTime())?'—':d.toLocaleDateString('bn-BD');
+function validMemberId(value){
+  return /^MSH(?!000)\d{3,}$/i.test(value);
 }
 
-/* Initialize connection automatically */
-function initialize(){
-  if(!window.supabase?.createClient){
-    message('loginMsg','Supabase client লোড হয়নি। পৃষ্ঠা Refresh করুন।',true);
-    $('loginBtn').disabled=true;
-    return;
-  }
-
-  if(!publishableKey || publishableKey === 'YOUR_PUBLISHABLE_KEY_HERE'){
-    message('loginMsg','Publishable Key কোডে বসানো হয়নি।',true);
-    $('loginBtn').disabled=true;
-    return;
-  }
-
-  try{
-    supabaseClient=window.supabase.createClient(
-      projectUrl,
-      publishableKey
-    );
-  }catch(error){
-    message('loginMsg','ওয়েবসাইট সংযোগ করা যায়নি।',true);
-    $('loginBtn').disabled=true;
-  }
-}
+/* =====================================
+   LOGIN
+===================================== */
 
 async function signIn(){
-  const loginId=$('loginId').value.trim();
-  const password=$('password').value;
-
-  if(!supabaseClient){
-    message('loginMsg','ওয়েবসাইট সংযোগ করা যায়নি।',true);
-    return;
-  }
+  const loginId = $("loginId").value.trim();
+  const password = $("password").value;
 
   if(!loginId || !password){
-    message('loginMsg','ইমেইল/User ID ও পাসওয়ার্ড দিন।',true);
+    showMessage("loginMsg","আইডি ও পাসওয়ার্ড দিন","error");
     return;
   }
 
-  let email;
+  $("loginBtn").disabled = true;
 
-  if(validMemberId(loginId.toUpperCase())){
-    email=`${loginId.toLowerCase()}@members.matarbari.local`;
-  }else if(loginId.includes('@')){
-    email=loginId;
-  }else{
-    message('loginMsg','সঠিক ইমেইল অথবা MSH User ID দিন।',true);
+  let email = loginId;
+
+  if(validMemberId(loginId)){
+    email = loginId.toLowerCase() + "@members.matarbari.local";
+  }
+
+  const {data,error} = await supabaseClient.auth.signInWithPassword({
+    email,
+    password
+  });
+
+  $("loginBtn").disabled = false;
+
+  if(error){
+    showMessage("loginMsg","লগইন ব্যর্থ: " + error.message,"error");
     return;
   }
 
-  busy('loginBtn',true);
-  message('loginMsg','লগইন হচ্ছে...');
+  currentUser = data.user;
+  await loadDashboard();
+}
 
-  try{
-    const {data,error}=await supabaseClient.auth.signInWithPassword({
-      email,
-      password
-    });
+/* =====================================
+   INITIALIZE
+===================================== */
 
-    if(error) throw error;
+async function initialize(){
+  const {data} = await supabaseClient.auth.getSession();
 
-    currentUser=data.user;
+  if(data.session){
+    currentUser = data.session.user;
     await loadDashboard();
-
-  }catch(error){
-    message('loginMsg',error.message || 'লগইন করা যায়নি।',true);
-  }finally{
-    busy('loginBtn',false);
   }
 }
 
-  async function loadMemberProfile(){
-  const {data,error}=await supabaseClient
-    .from('member_profiles')
-    .select('*')
-    .eq('user_id',currentUser.id)
+/* =====================================
+   DASHBOARD
+===================================== */
+
+async function loadDashboard(){
+  if(!currentUser) return;
+
+  $("login").classList.add("hidden");
+  $("dashboard").classList.remove("hidden");
+
+  const {data:profile,error} = await supabaseClient
+    .from("profiles")
+    .select("*")
+    .eq("id",currentUser.id)
+    .single();
+
+  if(error || !profile){
+    alert("অ্যাকাউন্ট প্রোফাইল পাওয়া যায়নি।");
+    return;
+  }
+
+  currentProfile = profile;
+  currentRole = profile.role;
+
+  $("welcome").textContent =
+    "স্বাগতম, " + (profile.full_name || currentUser.email);
+
+  if(currentRole === "admin"){
+    $("admin").classList.remove("hidden");
+    $("memberProfileArea").classList.add("hidden");
+
+    await loadAdminMembers();
+    await loadAdminProfiles();
+    await loadTransactions();
+  }else{
+    $("admin").classList.add("hidden");
+    $("memberProfileArea").classList.remove("hidden");
+
+    await loadMemberProfile();
+    await loadTransactions();
+  }
+}
+
+/* =====================================
+   MEMBER PROFILE
+===================================== */
+
+async function loadMemberProfile(){
+  const {data,error} = await supabaseClient
+    .from("member_profiles")
+    .select("*")
+    .eq("user_id",currentUser.id)
     .maybeSingle();
 
   if(error){
-    message('profileMessage','প্রোফাইল লোড করা যায়নি।',true);
+    showMessage("profileMessage",error.message,"error");
     return;
   }
 
   if(data){
-    $('memberProfileForm').classList.add('hidden');
-    $('memberProfileView').classList.remove('hidden');
+    $("memberProfileForm").classList.add("hidden");
+    $("memberProfileView").classList.remove("hidden");
 
-    $('memberProfileDetails').innerHTML=`
-      <p><strong>নাম:</strong> ${escapeHTML(data.full_name || '')}</p>
-      <p><strong>পিতার নাম:</strong> ${escapeHTML(data.father_name || '')}</p>
-      <p><strong>মাতার নাম:</strong> ${escapeHTML(data.mother_name || '')}</p>
-      <p><strong>রক্তের গ্রুপ:</strong> ${escapeHTML(data.blood_group || '')}</p>
-      <p><strong>মোবাইল:</strong> ${escapeHTML(data.phone || '')}</p>
-      <p><strong>ঠিকানা:</strong> ${escapeHTML(data.address || '')}</p>
-      <p><strong>শিক্ষা:</strong> ${escapeHTML(data.education || '')}</p>
-      <p><strong>পেশা:</strong> ${escapeHTML(data.occupation || '')}</p>
-      <p><strong>পরিচিতি:</strong> ${escapeHTML(data.about || '')}</p>
-    `;
-  }else{
-    $('memberProfileView').classList.add('hidden');
-    $('memberProfileForm').classList.remove('hidden');
+    let photoHTML = "";
 
-    const {data:basic}=await supabaseClient
-      .from('profiles')
-      .select('full_name')
-      .eq('id',currentUser.id)
-      .maybeSingle();
+    if(data.photo_path){
+      const {data:urlData} = await supabaseClient.storage
+        .from("member-photos")
+        .createSignedUrl(data.photo_path,3600);
 
-    $('profileFullName').value=basic?.full_name || '';
-  }
+      if(urlData?.signedUrl){
+        photoHTML = `<img class="profile-photo" src="${urlData.signedUrl}" alt="প্রোফাইল ছবি">`;
       }
-
-async function loadAdminProfiles(){
-  const area = $('adminProfiles');
-  area.textContent = 'সদস্যদের প্রোফাইল লোড হচ্ছে...';
-
-  const {data: profiles, error} = await supabaseClient
-    .from('member_profiles')
-    .select('*')
-    .order('created_at', {ascending: false});
-
-  if(error){
-    area.textContent = 'প্রোফাইল লোড করা যায়নি: ' + error.message;
-    return;
-  }
-
-  const {data: members, error: memberError} = await supabaseClient
-    .from('member_directory')
-    .select('member_code, full_name, auth_user_id');
-
-  if(memberError){
-    area.textContent = 'সদস্যের তথ্য লোড করা যায়নি।';
-    return;
-  }
-
-  if(!profiles || profiles.length === 0){
-    area.textContent = 'এখনো কোনো সদস্য প্রোফাইল তৈরি করেনি।';
-    return;
-  }
-
-  const memberMap = new Map(
-    (members || []).map(m => [m.auth_user_id, m])
-  );
-
-  area.innerHTML = '';
-
-  for(const p of profiles){
-    const member = memberMap.get(p.user_id);
-    let photoUrl = '';
-
-    if(p.photo_path){
-      const {data: photoData} = await supabaseClient
-        .storage
-        .from('member-photos')
-        .createSignedUrl(p.photo_path, 3600);
-
-      photoUrl = photoData?.signedUrl || '';
     }
 
-    const card = document.createElement('div');
-    card.className = 'card';
-
-    card.innerHTML = `
-      ${photoUrl
-        ? '<img src="' + escapeHTML(photoUrl) + '" alt="সদস্যের ছবি" style="width:110px;height:110px;object-fit:cover;border-radius:50%;">'
-        : '<p>ছবি আপলোড করা হয়নি</p>'}
-
-      <h4>${escapeHTML(member?.member_code || '')} — ${escapeHTML(p.full_name || '')}</h4>
-      <p>পিতার নাম: ${escapeHTML(p.father_name || '')}</p>
-      <p>মাতার নাম: ${escapeHTML(p.mother_name || '')}</p>
-      <p>জন্ম তারিখ: ${escapeHTML(p.date_of_birth || '')}</p>
-      <p>রক্তের গ্রুপ: ${escapeHTML(p.blood_group || '')}</p>
-      <p>মোবাইল: ${escapeHTML(p.phone || '')}</p>
-      <p>ঠিকানা: ${escapeHTML(p.address || '')}</p>
-      <p>শিক্ষা: ${escapeHTML(p.education || '')}</p>
-      <p>পেশা: ${escapeHTML(p.occupation || '')}</p>
-      <p>পরিচিতি: ${escapeHTML(p.about || '')}</p>
-
-      <button type="button" class="editProfileBtn">প্রোফাইল এডিট</button>
-      <div class="editProfileForm hidden"></div>
+    $("memberProfileDetails").innerHTML = `
+      ${photoHTML}
+      <p><b>নাম:</b> ${escapeHTML(data.full_name)}</p>
+      <p><b>পিতার নাম:</b> ${escapeHTML(data.father_name)}</p>
+      <p><b>মাতার নাম:</b> ${escapeHTML(data.mother_name)}</p>
+      <p><b>জন্ম তারিখ:</b> ${escapeHTML(data.date_of_birth)}</p>
+      <p><b>রক্তের গ্রুপ:</b> ${escapeHTML(data.blood_group)}</p>
+      <p><b>মোবাইল:</b> ${escapeHTML(data.phone)}</p>
+      <p><b>ঠিকানা:</b> ${escapeHTML(data.address)}</p>
+      <p><b>শিক্ষা:</b> ${escapeHTML(data.education)}</p>
+      <p><b>পেশা:</b> ${escapeHTML(data.occupation)}</p>
+      <p><b>নিজের সম্পর্কে:</b> ${escapeHTML(data.about)}</p>
+      <p class="small">সদস্য হওয়ার তারিখ: ${escapeHTML(data.join_date)}</p>
     `;
+  }else{
+    $("memberProfileView").classList.add("hidden");
+    $("memberProfileForm").classList.remove("hidden");
 
-    area.appendChild(card);
-
-    const editBtn = card.querySelector('.editProfileBtn');
-    const formArea = card.querySelector('.editProfileForm');
-
-    editBtn.addEventListener('click', () => {
-      formArea.classList.toggle('hidden');
-
-      formArea.innerHTML = `
-        <hr>
-        <h4>সদস্যের তথ্য পরিবর্তন</h4>
-
-        <label>নতুন প্রোফাইল ছবি</label>
-        <input type="file" class="ePhoto" accept="image/jpeg,image/png,image/webp">
-
-        <label>পূর্ণ নাম</label>
-        <input class="eFullName" value="${escapeHTML(p.full_name || '')}">
-
-        <label>পিতার নাম</label>
-        <input class="eFather" value="${escapeHTML(p.father_name || '')}">
-
-        <label>মাতার নাম</label>
-        <input class="eMother" value="${escapeHTML(p.mother_name || '')}">
-
-        <label>জন্ম তারিখ</label>
-        <input class="eDob" type="date" value="${escapeHTML(p.date_of_birth || '')}">
-
-        <label>রক্তের গ্রুপ</label>
-        <select class="eBlood">
-          <option value="">নির্বাচন করুন</option>
-          ${['A+','A-','B+','B-','AB+','AB-','O+','O-'].map(v =>
-            `<option value="${v}" ${p.blood_group === v ? 'selected' : ''}>${v}</option>`
-          ).join('')}
-        </select>
-
-        <label>মোবাইল</label>
-        <input class="ePhone" value="${escapeHTML(p.phone || '')}">
-
-        <label>ঠিকানা</label>
-        <textarea class="eAddress">${escapeHTML(p.address || '')}</textarea>
-
-        <label>শিক্ষা</label>
-        <input class="eEducation" value="${escapeHTML(p.education || '')}">
-
-        <label>পেশা</label>
-        <input class="eOccupation" value="${escapeHTML(p.occupation || '')}">
-
-        <label>পরিচিতি</label>
-        <textarea class="eAbout">${escapeHTML(p.about || '')}</textarea>
-
-        <button type="button" class="saveEditProfile">পরিবর্তন সংরক্ষণ</button>
-        <p class="editMessage"></p>
-      `;
-
-      formArea.querySelector('.saveEditProfile').addEventListener('click', async () => {
-        const btn = formArea.querySelector('.saveEditProfile');
-        const msg = formArea.querySelector('.editMessage');
-
-        const fullName = formArea.querySelector('.eFullName').value.trim();
-
-        if(!fullName){
-          msg.textContent = 'পূর্ণ নাম লিখুন।';
-          return;
-        }
-
-        btn.disabled = true;
-        msg.textContent = 'সংরক্ষণ হচ্ছে...';
-
-        const photoFile = formArea.querySelector('.ePhoto').files[0];
-        let newPhotoPath = p.photo_path || '';
-
-        if(photoFile){
-          if(!['image/jpeg','image/png','image/webp'].includes(photoFile.type)){
-            msg.textContent = 'শুধু JPG, PNG অথবা WEBP ছবি দিন।';
-            btn.disabled = false;
-            return;
-          }
-
-          if(photoFile.size > 2 * 1024 * 1024){
-            msg.textContent = 'ছবির আকার ২ MB-এর বেশি হতে পারবে না।';
-            btn.disabled = false;
-            return;
-          }
-
-          const ext = photoFile.type === 'image/png' ? 'png' :
-            photoFile.type === 'image/webp' ? 'webp' : 'jpg';
-
-          newPhotoPath = `${p.user_id}/admin-${Date.now()}.${ext}`;
-
-          const {error: uploadError} = await supabaseClient.storage
-            .from('member-photos')
-            .upload(newPhotoPath, photoFile, {upsert:false});
-
-          if(uploadError){
-            msg.textContent = 'ছবি আপলোড হয়নি: ' + uploadError.message;
-            btn.disabled = false;
-            return;
-          }
-        }
-
-        const {error: updateError} = await supabaseClient
-          .from('member_profiles')
-          .update({
-            full_name: fullName,
-            photo_path: newPhotoPath || null,
-            father_name: formArea.querySelector('.eFather').value.trim(),
-            mother_name: formArea.querySelector('.eMother').value.trim(),
-            date_of_birth: formArea.querySelector('.eDob').value || null,
-            blood_group: formArea.querySelector('.eBlood').value,
-            phone: formArea.querySelector('.ePhone').value.trim(),
-            address: formArea.querySelector('.eAddress').value.trim(),
-            education: formArea.querySelector('.eEducation').value.trim(),
-            occupation: formArea.querySelector('.eOccupation').value.trim(),
-            about: formArea.querySelector('.eAbout').value.trim(),
-            updated_at: new Date().toISOString()
-          })
-          .eq('user_id', p.user_id);
-
-        if(updateError){
-          msg.textContent = 'সংরক্ষণ হয়নি: ' + updateError.message;
-          btn.disabled = false;
-          return;
-        }
-
-        alert('সদস্যের প্রোফাইল আপডেট হয়েছে।');
-        await loadAdminProfiles();
-      });
-    });
+    $("profileFullName").value = currentProfile.full_name || "";
   }
 }
-  
-async function loadDashboard(){
-  $('login').classList.add('hidden');
-  $('dashboard').classList.remove('hidden');
-  $('admin').classList.add('hidden');
-  $('records').textContent='হিসাব লোড হচ্ছে...';
 
-  const {data:profile,error}=await supabaseClient
-    .from('profiles')
-    .select('full_name,role')
-    .eq('id',currentUser.id)
-    .maybeSingle();
+async function saveMemberProfile(){
+  const fullName = $("profileFullName").value.trim();
 
-  if(error || !profile){
-    await supabaseClient.auth.signOut();
-    currentUser=null;
-    $('dashboard').classList.add('hidden');
-    $('login').classList.remove('hidden');
-    message('loginMsg','প্রোফাইল পাওয়া যায়নি।',true);
+  if(!fullName){
+    showMessage("profileMessage","নাম লিখুন","error");
     return;
   }
 
-  isAdmin=profile.role==='admin';
-if(!isAdmin){
+  $("saveMemberProfile").disabled = true;
+  showMessage("profileMessage","প্রোফাইল সংরক্ষণ হচ্ছে...");
+
+  let photoPath = null;
+  const photo = $("profilePhoto").files[0];
+
+  if(photo){
+    const allowed = ["image/jpeg","image/png","image/webp"];
+
+    if(!allowed.includes(photo.type) || photo.size > 2*1024*1024){
+      showMessage("profileMessage","JPG, PNG অথবা WEBP ছবি দিন (সর্বোচ্চ ২ MB)","error");
+      $("saveMemberProfile").disabled = false;
+      return;
+    }
+
+    const ext = photo.type === "image/png" ? "png" :
+                photo.type === "image/webp" ? "webp" : "jpg";
+
+    photoPath = `${currentUser.id}/profile.${ext}`;
+
+    const {error:uploadError} = await supabaseClient.storage
+      .from("member-photos")
+      .upload(photoPath,photo,{upsert:false});
+
+    if(uploadError){
+      showMessage("profileMessage","ছবি আপলোড হয়নি: " + uploadError.message,"error");
+      $("saveMemberProfile").disabled = false;
+      return;
+    }
+  }
+
+  const profileData = {
+    user_id:currentUser.id,
+    full_name:fullName,
+    father_name:$("fatherName").value.trim(),
+    mother_name:$("motherName").value.trim(),
+    date_of_birth:$("dateOfBirth").value || null,
+    blood_group:$("bloodGroup").value,
+    phone:$("profilePhone").value.trim(),
+    address:$("profileAddress").value.trim(),
+    education:$("profileEducation").value.trim(),
+    occupation:$("profileOccupation").value.trim(),
+    about:$("profileAbout").value.trim(),
+    photo_path:photoPath
+  };
+
+  const {error} = await supabaseClient
+    .from("member_profiles")
+    .insert(profileData);
+
+  $("saveMemberProfile").disabled = false;
+
+  if(error){
+    showMessage("profileMessage","সংরক্ষণ ব্যর্থ: " + error.message,"error");
+    return;
+  }
+
+  showMessage("profileMessage","প্রোফাইল তৈরি হয়েছে");
   await loadMemberProfile();
 }
-  $('welcome').textContent=
-    `${profile.full_name || 'সদস্য'} — ড্যাশবোর্ড`;
 
-  if(isAdmin){
-  $('admin').classList.remove('hidden');
-  await loadAdminMembers();
-  await loadAdminProfiles();
+/* =====================================
+   TRANSACTIONS
+===================================== */
+
+async function loadTransactions(){
+  let query = supabaseClient
+    .from("transactions")
+    .select("*")
+    .order("created_at",{ascending:false});
+
+  if(currentRole !== "admin"){
+    query = query.eq("member_id",currentUser.id);
+  }
+
+  const {data,error} = await query;
+
+  if(error){
+    $("records").innerHTML = `<tr><td colspan="4">তথ্য লোড হয়নি</td></tr>`;
+    return;
+  }
+
+  let deposit = 0;
+  let withdraw = 0;
+
+  $("records").innerHTML = "";
+
+  (data || []).forEach(item => {
+    const amount = Number(item.amount || 0);
+
+    if(item.type === "জমা") deposit += amount;
+    if(item.type === "উত্তোলন") withdraw += amount;
+
+    const date = item.created_at
+      ? new Date(item.created_at).toLocaleDateString("bn-BD")
+      : "";
+
+    const tr = document.createElement("tr");
+
+    [date,item.type,taka(amount),item.description || ""].forEach(value => {
+      const td = document.createElement("td");
+      td.textContent = value;
+      tr.appendChild(td);
+    });
+
+    $("records").appendChild(tr);
+  });
+
+  if(currentRole !== "admin"){
+    $("totalDeposit").textContent = taka(deposit);
+    $("totalWithdraw").textContent = taka(withdraw);
+    $("balance").textContent = taka(deposit-withdraw);
+  }
 }
+
+/* =====================================
+   ADMIN: MEMBER LIST
+===================================== */
+
+async function loadAdminMembers(){
+  const {data,error} = await supabaseClient
+    .from("member_directory")
+    .select("*")
+    .order("member_code");
+
+  if(error){
+    showMessage("adminMsg","সদস্য তালিকা লোড হয়নি: "+error.message,"error");
+    return;
+  }
+
+  $("memberId").innerHTML = '<option value="">সদস্য নির্বাচন করুন</option>';
+  $("resetMemberId").innerHTML = '<option value="">সদস্য নির্বাচন করুন</option>';
+
+  (data || []).forEach(member => {
+    const option1 = document.createElement("option");
+    option1.value = member.auth_user_id;
+    option1.textContent = member.member_code + " - " + member.full_name;
+
+    const option2 = option1.cloneNode(true);
+
+    $("memberId").appendChild(option1);
+    $("resetMemberId").appendChild(option2);
+  });
+}
+
+/* =====================================
+   ADMIN: CREATE ACCOUNT
+===================================== */
+
+async function createMemberAccount(){
+  const name = $("newMemberName").value.trim();
+  const phone = $("newMemberPhone").value.trim();
+  const email = $("newMemberEmail").value.trim();
+  const memberCode = $("newMemberCode").value.trim().toUpperCase();
+  const password = $("newMemberPassword").value;
+
+  if(!name || !validMemberId(memberCode) || password.length < 6){
+    showMessage("createMsg","নাম, সঠিক সদস্য আইডি এবং কমপক্ষে ৬ অক্ষরের পাসওয়ার্ড দিন","error");
+    return;
+  }
+
+  const {data:sessionData} = await supabaseClient.auth.getSession();
+  const token = sessionData.session?.access_token;
+
+  if(!token){
+    showMessage("createMsg","অ্যাডমিন লগইন পাওয়া যায়নি","error");
+    return;
+  }
+
+  const {data,error} = await supabaseClient.functions.invoke(
+    "create-member-account",
+    {
+      body:{name,phone,email,memberCode,password}
+    }
+  );
+
+  if(error){
+    showMessage("createMsg",error.message,"error");
+    return;
+  }
+
+  showMessage("createMsg",data?.message || "সদস্য অ্যাকাউন্ট তৈরি হয়েছে");
+
+  $("newMemberName").value = "";
+  $("newMemberPhone").value = "";
+  $("newMemberEmail").value = "";
+  $("newMemberCode").value = "";
+  $("newMemberPassword").value = "";
+
+  await loadAdminMembers();
+}
+
+/* =====================================
+   ADMIN: RESET PASSWORD
+===================================== */
+
+async function resetMemberPassword(){
+  const memberId = $("resetMemberId").value;
+  const password = $("resetPassword").value;
+
+  if(!memberId || password.length < 6){
+    showMessage("resetMsg","সদস্য নির্বাচন করুন এবং কমপক্ষে ৬ অক্ষরের পাসওয়ার্ড দিন","error");
+    return;
+  }
+
+  const {data,error} = await supabaseClient.functions.invoke(
+    "admin-reset-member-password",
+    {
+      body:{userId:memberId,newPassword:password}
+    }
+  );
+
+  if(error){
+    showMessage("resetMsg",error.message,"error");
+    return;
+  }
+
+  showMessage("resetMsg",data?.message || "পাসওয়ার্ড পরিবর্তন হয়েছে");
+  $("resetPassword").value = "";
+}
+
+/* =====================================
+   ADMIN: ADD TRANSACTION
+===================================== */
+
+async function addTransaction(){
+  const memberId = $("memberId").value;
+  const amount = Number($("amount").value);
+  const type = $("kind").value;
+  const description = $("note").value.trim();
+
+  if(!memberId || !Number.isFinite(amount) || amount <= 0){
+    showMessage("adminMsg","সদস্য ও সঠিক পরিমাণ দিন","error");
+    return;
+  }
+
+  const {error} = await supabaseClient
+    .from("transactions")
+    .insert({
+      member_id:memberId,
+      amount,
+      type,
+      description,
+      created_by:currentUser.id
+    });
+
+  if(error){
+    showMessage("adminMsg","লেনদেন সংরক্ষণ হয়নি: "+error.message,"error");
+    return;
+  }
+
+  showMessage("adminMsg","লেনদেন সংরক্ষণ হয়েছে");
+
+  $("amount").value = "";
+  $("note").value = "";
 
   await loadTransactions();
 }
 
-async function loadTransactions(){
-  let query=supabaseClient
-    .from('transactions')
-    .select('id,member_id,amount,transaction_type,description,created_at')
-    .order('created_at',{ascending:false});
-
-  if(!isAdmin){
-    query=query.eq('member_id',currentUser.id);
-  }
-
-  const {data,error}=await query;
-
-  if(error){
-    $('records').textContent='হিসাব আনা যায়নি। ডাটাবেস অনুমতি যাচাই করুন।';
-    return;
-  }
-
-  const transactions=data || [];
-
-  if(!isAdmin){
-    const deposits=transactions.filter(
-      x=>x.transaction_type==='জমা'
-    );
-
-    const totalDeposit=deposits.reduce(
-      (sum,x)=>sum+Number(x.amount || 0),0
-    );
-
-    const monthly={};
-
-    for(const item of deposits){
-      const date=new Date(item.created_at);
-      const key=`${date.getFullYear()}-${date.getMonth()}`;
-
-      if(!monthly[key]){
-        monthly[key]={
-          label:date.toLocaleDateString('bn-BD',{
-            month:'long',
-            year:'numeric'
-          }),
-          amount:0
-        };
-      }
-
-      monthly[key].amount+=Number(item.amount || 0);
-    }
-
-    const currentDate=new Date();
-    const currentKey=`${currentDate.getFullYear()}-${currentDate.getMonth()}`;
-    const currentMonth=monthly[currentKey]?.amount || 0;
-
-    const monthlyRows=Object.values(monthly).map(x=>`
-      <tr>
-        <td>${escapeHTML(x.label)}</td>
-        <td>৳${escapeHTML(x.amount.toLocaleString('bn-BD'))}</td>
-      </tr>
-    `).join('');
-
-    $('records').innerHTML=`
-      <h3>আমার সঞ্চয়ের হিসাব</h3>
-      <p><strong>মোট জমা:</strong> ৳${totalDeposit.toLocaleString('bn-BD')}</p>
-      <p><strong>চলতি মাসের জমা:</strong> ৳${currentMonth.toLocaleString('bn-BD')}</p>
-
-      <h4>মাসভিত্তিক জমা</h4>
-      ${monthlyRows ? `
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th>মাস</th><th>জমা</th></tr></thead>
-            <tbody>${monthlyRows}</tbody>
-          </table>
-        </div>
-      ` : '<p>এখনো কোনো জমা নেই।</p>'}
-      <h4>লেনদেনের বিবরণ</h4>
-      ${renderTransactionTable(transactions)}
-    `;
-  }else{
-    $('records').innerHTML=`
-      <h3>সকল সদস্যের লেনদেন</h3>
-      ${renderTransactionTable(transactions)}
-    `;
-  }
-}
-
-function renderTransactionTable(data){
-  if(!data.length){
-    return '<p>এখনো কোনো লেনদেন যোগ হয়নি।</p>';
-  }
-
-  const rows=data.map(x=>`
-    <tr>
-      <td>${escapeHTML(formatDate(x.created_at))}</td>
-      <td>${escapeHTML(x.transaction_type)}</td>
-      <td>৳${escapeHTML(x.amount)}</td>
-      <td>${escapeHTML(x.description)}</td>
-    </tr>
-  `).join('');
-
-  return `
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr><th>তারিখ</th><th>ধরন</th><th>টাকা</th><th>বিবরণ</th></tr>
-        </thead>
-        <tbody>${rows}</tbody>
-      </table>
-    </div>
-  `;
-}
-
-async function loadAdminMembers(){
-  const {data,error}=await supabaseClient
-    .from('member_directory')
-    .select('member_code,full_name,auth_user_id')
-    .order('member_code');
-
-  if(error){
-    message('createMsg','সদস্য তালিকা আনা যায়নি। অনুমতি যাচাই করুন।',true);
-    return;
-  }
-
-  const transactionSelect=$('memberId');
-  const resetSelect=$('resetMemberId');
-
-  transactionSelect.innerHTML='<option value="">সদস্য নির্বাচন করুন</option>';
-  resetSelect.innerHTML='<option value="">সদস্য নির্বাচন করুন</option>';
-
-  for(const member of data || []){
-    if(member.auth_user_id){
-      const option=document.createElement('option');
-      option.value=member.auth_user_id;
-      option.textContent=`${member.member_code} — ${member.full_name}`;
-      transactionSelect.appendChild(option);
-
-      const resetOption=document.createElement('option');
-      resetOption.value=member.member_code;
-      resetOption.textContent=`${member.member_code} — ${member.full_name}`;
-      resetSelect.appendChild(resetOption);
-    }
-  }
-}
-
+/* =====================================
+   ADMIN: MEMBER PROFILES
+===================================== */
 
 async function loadAdminProfiles(){
-  const area = $('adminProfiles');
-  area.textContent = 'সদস্যদের প্রোফাইল লোড হচ্ছে...';
+  const area = $("adminProfiles");
+  area.textContent = "সদস্যদের প্রোফাইল লোড হচ্ছে...";
 
-  const {data: profiles, error} = await supabaseClient
-    .from('member_profiles')
-    .select('*')
-    .order('created_at', {ascending: false});
+  const {data:profiles,error} = await supabaseClient
+    .from("member_profiles")
+    .select("*")
+    .order("created_at",{ascending:false});
 
   if(error){
-    area.textContent = 'প্রোফাইল লোড করা যায়নি: ' + error.message;
+    area.textContent = "প্রোফাইল লোড হয়নি: " + error.message;
     return;
   }
 
-  const {data: members, error: memberError} = await supabaseClient
-    .from('member_directory')
-    .select('member_code, full_name, auth_user_id');
-
-  if(memberError){
-    area.textContent = 'সদস্যের তথ্য লোড করা যায়নি।';
+  if(!profiles?.length){
+    area.textContent = "কোনো সদস্য প্রোফাইল পাওয়া যায়নি।";
     return;
   }
 
-  if(!profiles || profiles.length === 0){
-    area.textContent = 'এখনো কোনো সদস্য প্রোফাইল তৈরি করেনি।';
-    return;
-  }
-
-  const memberMap = new Map(
-    (members || []).map(m => [m.auth_user_id, m])
-  );
-
-  area.innerHTML = '';
+  area.innerHTML = "";
 
   for(const p of profiles){
-    const member = memberMap.get(p.user_id);
-    let photoUrl = '';
+    const card = document.createElement("div");
+    card.className = "member-card";
 
-if(p.photo_path){
-  const {data: photoData} = await supabaseClient
-    .storage
-    .from('member-photos')
-    .createSignedUrl(p.photo_path, 3600);
+    let photoURL = "";
 
-  photoUrl = photoData?.signedUrl || '';
-}
-    const card = document.createElement('div');
-    card.className = 'card';
-
-${photoUrl ? `<img src="${photoUrl}" alt="সদস্যের ছবি" style="width:110px;height:110px;object-fit:cover;border-radius:50%;">` : '<p>ছবি আপলোড করা হয়নি</p>'}
-    
-    card.innerHTML = `
-    ${photoUrl ? `DIL0
-      <h4>${escapeHTML(member?.member_code || '')} — ${escapeHTML(p.full_name || '')}</h4>
-      <p>পিতার নাম: ${escapeHTML(p.father_name || '')}</p>
-      <p>মাতার নাম: ${escapeHTML(p.mother_name || '')}</p>
-      <p>জন্ম তারিখ: ${escapeHTML(p.date_of_birth || '')}</p>
-      <p>রক্তের গ্রুপ: ${escapeHTML(p.blood_group || '')}</p>
-      <p>মোবাইল: ${escapeHTML(p.phone || '')}</p>
-      <p>ঠিকানা: ${escapeHTML(p.address || '')}</p>
-      <p>শিক্ষা: ${escapeHTML(p.education || '')}</p>
-      <p>পেশা: ${escapeHTML(p.occupation || '')}</p>
-      <p>পরিচিতি: ${escapeHTML(p.about || '')}</p>
-      <button type="button" class="editProfileBtn">প্রোফাইল এডিট</button>
-      <div class="editProfileForm hidden"></div>
-    `;
-
-    area.appendChild(card);
-
-    const editBtn = card.querySelector('.editProfileBtn');
-    const formArea = card.querySelector('.editProfileForm');
-
-    editBtn.addEventListener('click', () => {
-      formArea.classList.toggle('hidden');
-
-      formArea.innerHTML = `
-        <hr>
-        <h4>সদস্যের তথ্য পরিবর্তন</h4>
-      <label>নতুন প্রোফাইল ছবি</label>
-<input
-  type="file"
-  class="ePhoto"
-  accept="image/jpeg,image/png,image/webp"
->
-
-        <label>পূর্ণ নাম</label>
-        <input class="eFullName" value="${escapeHTML(p.full_name || '')}">
-
-        <label>পিতার নাম</label>
-        <input class="eFather" value="${escapeHTML(p.father_name || '')}">
-
-        <label>মাতার নাম</label>
-        <input class="eMother" value="${escapeHTML(p.mother_name || '')}">
-
-        <label>জন্ম তারিখ</label>
-        <input class="eDob" type="date" value="${escapeHTML(p.date_of_birth || '')}">
-
-        <label>রক্তের গ্রুপ</label>
-        <select class="eBlood">
-          <option value="">নির্বাচন করুন</option>
-          ${['A+','A-','B+','B-','AB+','AB-','O+','O-'].map(v =>
-            `<option value="${v}" ${p.blood_group === v ? 'selected' : ''}>${v}</option>`
-          ).join('')}
-        </select>
-
-        <label>মোবাইল</label>
-        <input class="ePhone" value="${escapeHTML(p.phone || '')}">
-
-        <label>ঠিকানা</label>
-        <textarea class="eAddress">${escapeHTML(p.address || '')}</textarea>
-
-        <label>শিক্ষা</label>
-        <input class="eEducation" value="${escapeHTML(p.education || '')}">
-
-        <label>পেশা</label>
-        <input class="eOccupation" value="${escapeHTML(p.occupation || '')}">
-
-        <label>পরিচিতি</label>
-        <textarea class="eAbout">${escapeHTML(p.about || '')}</textarea>
-
-        <button type="button" class="saveEditProfile">পরিবর্তন সংরক্ষণ</button>
-        <p class="editMessage"></p>
-      `;
-
-      formArea.querySelector('.saveEditProfile').addEventListener('click', async () => {
-        const btn = formArea.querySelector('.saveEditProfile');
-        const msg = formArea.querySelector('.editMessage');
-
-        const fullName = formArea.querySelector('.eFullName').value.trim();
-
-        if(!fullName){
-          msg.textContent = 'পূর্ণ নাম লিখুন।';
-          return;
-        }
-
-        btn.disabled = true;
-        msg.textContent = 'সংরক্ষণ হচ্ছে...';
-
-        const photoFile = formArea.querySelector('.ePhoto').files[0];
-let newPhotoPath = p.photo_path || '';
-
-if(photoFile){
-  if(!['image/jpeg','image/png','image/webp'].includes(photoFile.type)){
-    msg.textContent = 'শুধু JPG, PNG অথবা WEBP ছবি দিন।';
-    btn.disabled = false;
-    return;
-  }
-
-  if(photoFile.size > 2 * 1024 * 1024){
-    msg.textContent = 'ছবির আকার ২ MB-এর বেশি হতে পারবে না।';
-    btn.disabled = false;
-    return;
-  }
-
-  const ext = photoFile.type === 'image/png' ? 'png' :
-    photoFile.type === 'image/webp' ? 'webp' : 'jpg';
-
-  newPhotoPath = `${p.user_id}/admin-${Date.now()}.${ext}`;
-
-  const {error: uploadError} = await supabaseClient.storage
-    .from('member-photos')
-    .upload(newPhotoPath, photoFile, {upsert:false});
-
-  if(uploadError){
-    msg.textContent = 'ছবি আপলোড হয়নি: ' + uploadError.message;
-    btn.disabled = false;
-    return;
-  }
-          }
-
-        const {error: updateError} = await supabaseClient
-          .from('member_profiles')
-          .update({
-            full_name: fullName,
-            father_name: formArea.querySelector('.eFather').value.trim(),
-            mother_name: formArea.querySelector('.eMother').value.trim(),
-            date_of_birth: formArea.querySelector('.eDob').value || null,
-            blood_group: formArea.querySelector('.eBlood').value,
-            phone: formArea.querySelector('.ePhone').value.trim(),
-            address: formArea.querySelector('.eAddress').value.trim(),
-            education: formArea.querySelector('.eEducation').value.trim(),
-            occupation: formArea.querySelector('.eOccupation').value.trim(),
-            about: formArea.querySelector('.eAbout').value.trim(),
-            updated_at: new Date().toISOString()
-          })
-          .eq('user_id', p.user_id);
-
-        if(updateError){
-          msg.textContent = 'সংরক্ষণ হয়নি: ' + updateError.message;
-          btn.disabled = false;
-          return;
-        }
-
-        alert('সদস্যের প্রোফাইল আপডেট হয়েছে।');
-        await loadAdminProfiles();
-      });
-    });
-  }
-}
-
-  
-async function createMemberAccount(){
-  if(!isAdmin){
-    message('createMsg','অনুমতি নেই।',true);
-    return;
-  }
-
-  const fullName=$('newMemberName').value.trim();
-  const phone=$('newMemberPhone').value.trim();
-  const email=$('newMemberEmail').value.trim();
-  const password=$('newMemberPassword').value;
-
-  if(!fullName || !phone || !email || password.length<8){
-    message('createMsg','সব তথ্য পূরণ করুন। পাসওয়ার্ড কমপক্ষে ৮ অক্ষরের হতে হবে।',true);
-    return;
-  }
-
-  busy('createAccountBtn',true);
-  message('createMsg','নতুন সদস্য যুক্ত হচ্ছে...');
-
-  try{
-    const {data:{session}}=await supabaseClient.auth.getSession();
-
-    if(!session?.access_token){
-      throw new Error('অ্যাডমিন সেশন পাওয়া যায়নি। আবার লগইন করুন।');
-    }
-
-    const response=await fetch(
-      `${projectUrl}/functions/v1/create-member-account`,
-      {
-        method:'POST',
-        headers:{
-          'Content-Type':'application/json',
-          'apikey':publishableKey,
-          'Authorization':`Bearer ${session.access_token}`
-        },
-        body:JSON.stringify({
-          full_name:fullName,
-          phone,
-          email,
-          password
-        })
-      }
-    );
-
-    const result=await response.json();
-
-    if(!response.ok){
-      throw new Error(result.error || 'সদস্য যুক্ত করা যায়নি।');
-    }
-
-    $('newMemberName').value='';
-    $('newMemberPhone').value='';
-    $('newMemberEmail').value='';
-    $('newMemberPassword').value='';
-
-    message('createMsg',`${result.member_code} — ${result.full_name} সফলভাবে যুক্ত হয়েছে।`);
-
-    await loadAdminMembers();
-
-  }catch(error){
-    message('createMsg',error.message || 'সদস্য যুক্ত করা যায়নি।',true);
-  }finally{
-    busy('createAccountBtn',false);
-  }
-}
-  
-async function resetMemberPassword(){
-  if(!isAdmin){
-    message('resetMsg','অনুমতি নেই।',true);
-    return;
-  }
-
-  const memberCode=$('resetMemberId').value;
-  const password=$('resetPassword').value;
-
-  if(!memberCode || password.length<8){
-    message('resetMsg','সদস্য নির্বাচন করুন এবং কমপক্ষে ৮ অক্ষরের নতুন পাসওয়ার্ড দিন।',true);
-    return;
-  }
-
-  busy('resetPasswordBtn',true);
-  message('resetMsg','পাসওয়ার্ড পরিবর্তন হচ্ছে...');
-
-  try{
-    const {data:{session}}=await supabaseClient.auth.getSession();
-
-    if(!session?.access_token){
-      throw new Error('অ্যাডমিন সেশন পাওয়া যায়নি। আবার লগইন করুন।');
-    }
-
-    const response=await fetch(
-      `${projectUrl}/functions/v1/admin-reset-member-password`,
-      {
-        method:'POST',
-        headers:{
-          'Content-Type':'application/json',
-          'apikey':publishableKey,
-          'Authorization':`Bearer ${session.access_token}`
-        },
-        body:JSON.stringify({
-          member_code:memberCode,
-          password
-        })
-      }
-    );
-
-    const result=await response.json();
-
-    if(!response.ok){
-      throw new Error(result.error || 'পাসওয়ার্ড পরিবর্তন করা যায়নি।');
-    }
-
-    $('resetPassword').value='';
-    message('resetMsg',`${memberCode} সদস্যের পাসওয়ার্ড পরিবর্তন হয়েছে।`);
-
-  }catch(error){
-    message('resetMsg',error.message || 'পাসওয়ার্ড পরিবর্তন করা যায়নি।',true);
-  }finally{
-    busy('resetPasswordBtn',false);
-  }
-}
-
-async function addTransaction(){
-  if(!isAdmin){
-    message('adminMsg','অনুমতি নেই।',true);
-    return;
-  }
-
-  const memberAuthId=$('memberId').value;
-  const amount=Number($('amount').value);
-  const kind=$('kind').value;
-  const note=$('note').value.trim();
-
-  if(!memberAuthId || !Number.isFinite(amount) || amount<=0 ||
-     !['জমা','উত্তোলন'].includes(kind)){
-    message('adminMsg','সদস্য, টাকার পরিমাণ ও ধরন সঠিকভাবে দিন।',true);
-    return;
-  }
-
-  busy('transactionBtn',true);
-  message('adminMsg','লেনদেন সংরক্ষণ হচ্ছে...');
-
-  try{
-    const {error}=await supabaseClient
-      .from('transactions')
-      .insert({
-        member_id:memberAuthId,
-        amount,
-        transaction_type:kind,
-        description:note,
-        created_by:currentUser.id
-      });
-
-    if(error) throw error;
-
-    $('amount').value='';
-    $('kind').value='';
-    $('note').value='';
-
-    message('adminMsg','লেনদেন যোগ হয়েছে।');
-    await loadTransactions();
-
-  }catch(error){
-    message('adminMsg',error.message || 'লেনদেন সংরক্ষণ হয়নি।',true);
-  }finally{
-    busy('transactionBtn',false);
-  }
-}
-
-async function signOut(){
-  await supabaseClient.auth.signOut();
-
-  currentUser=null;
-  isAdmin=false;
-
-  $('dashboard').classList.add('hidden');
-  $('admin').classList.add('hidden');
-  $('login').classList.remove('hidden');
-  $('password').value='';
-  $('loginId').value='';
-
-  message('loginMsg','');
-}
-
-/* Button actions */
-$('loginBtn').addEventListener('click',signIn);
-$('logoutBtn').addEventListener('click',signOut);
-$('createAccountBtn').addEventListener('click',createMemberAccount);
-$('resetPasswordBtn').addEventListener('click',resetMemberPassword);
-$('transactionBtn').addEventListener('click',addTransaction);
-$('saveMemberProfile').addEventListener('click',saveMemberProfile);
-/* Start automatically */
-initialize();
-
-</script>
-</body>
-</html>
+    if(p.photo_path){
+      const {data:urlData} = await supabaseClient.sto
