@@ -333,26 +333,28 @@ header p{
 #prayerTimes{
   margin-top:14px;
 }
-  /* Prayer Times Design */
-.prayer-time-row{
-  display:flex;
+  .prayer-time-row{
+  display:inline-flex;
   justify-content:space-between;
   align-items:center;
+  gap:8px;
+  width:calc(50% - 12px);
   background:#f1f8f4;
-  padding:13px 16px;
-  margin:8px 0;
+  padding:12px 9px;
+  margin:4px;
   border-radius:10px;
   border:1px solid #dce9e1;
+  box-sizing:border-box;
 }
 
 .prayer-time-row strong{
   color:#145c42;
-  font-size:15px;
+  font-size:14px;
 }
 
 .prayer-time-row span{
   color:#222;
-  font-size:15px;
+  font-size:13px;
   font-weight:bold;
   direction:ltr;
 }
@@ -1650,20 +1652,30 @@ async function loadPrayerTimes(lat, lon, locationName){
       "নির্বাচিত এলাকা: " + locationName;
 
     const prayers = [
-      ["ফজর",t.Fajr],
-      ["সূর্যোদয়",t.Sunrise],
-      ["যোহর",t.Dhuhr],
-      ["আসর",t.Asr],
-      ["মাগরিব",t.Maghrib],
-      ["ইশা",t.Isha]
-    ];
+  ["ফজর",t.Fajr],
+  ["সূর্যোদয়",t.Sunrise],
+  ["যোহর",t.Dhuhr],
+  ["আসর",t.Asr],
+  ["মাগরিব",t.Maghrib],
+  ["ইশা",t.Isha]
+];
 
-    box.innerHTML = prayers.map(([name,time]) =>
-      `<div class="prayer-time-row">
-        <strong>${name}</strong>
-        <span>${time}</span>
-      </div>`
-    ).join("");
+box.innerHTML = prayers.map(([name,time]) => {
+  const [hour, minute] = time.split(":").map(Number);
+  const date = new Date();
+  date.setHours(hour, minute, 0, 0);
+
+  const formattedTime = new Intl.DateTimeFormat("en-US", {
+    hour:"numeric",
+    minute:"2-digit",
+    hour12:true
+  }).format(date);
+
+  return `<div class="prayer-time-row">
+    <strong>${name}</strong>
+    <span>${formattedTime}</span>
+  </div>`;
+}).join("");
 
   } catch(error) {
     box.textContent = "নামাজের সময় লোড করা যায়নি। আবার চেষ্টা করো।";
