@@ -1693,58 +1693,6 @@ async function updateHomepageClock() {
       $("hijriDate").textContent =
         `হিজরি: ${bn.format(Number(h.day))} ${hijriMonths[h.month.number - 1]} ${bn.format(Number(h.year))} হিজরি`;
 
-    } catch (error) {
-      $("hijriDate").textContent =
-        "হিজরি: তারিখ লোড করা যায়নি";
-      lastHijriDateKey = "";
-    }
-  }
-}
-  // Website চালু
-initialize();
-  $("banglaDate").textContent = "বঙ্গাব্দ: " + bangla;
-
-  // হিজরি ক্যালেন্ডার
-  const hijri = new Intl.DateTimeFormat("bn-BD-u-ca-islamic-umalqura", {
-    timeZone: "Asia/Dhaka",
-    day: "numeric",
-    month: "long",
-    year: "numeric"
-  }).format(now);
-
-  $("hijriDate").textContent = "হিজরি: " + hijri;
-
-  // বাংলাদেশ সময়
-  $("liveClock").textContent = new Intl.DateTimeFormat("bn-BD", {
-    timeZone: "Asia/Dhaka",
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-    hour12: true
-  }).format(now);
-}
-
-function startHomepageClock(){
-  updateHomepageClock();
-
-  if(homepageClockInterval === null){
-    homepageClockInterval = setInterval(updateHomepageClock, 1000);
-  }
-  }
-  // Prayer Times
-const prayerCities = {
-  dhaka: {name:"ঢাকা", lat:23.8103, lon:90.4125},
-  chittagong: {name:"চট্টগ্রাম", lat:22.3569, lon:91.7832},
-  coxsbazar: {name:"কক্সবাজার", lat:21.4272, lon:92.0058},
-  sylhet: {name:"সিলেট", lat:24.8949, lon:91.8687},
-  rajshahi: {name:"রাজশাহী", lat:24.3745, lon:88.6042},
-  khulna: {name:"খুলনা", lat:22.8456, lon:89.5403},
-  barishal: {name:"বরিশাল", lat:22.7010, lon:90.3535},
-  rangpur: {name:"রংপুর", lat:25.7439, lon:89.2752},
-  mymensingh: {name:"ময়মনসিংহ", lat:24.7471, lon:90.4203}
-};
-
-
 // Live Clock and Calendar
 let homepageClockInterval = null;
 let lastHijriDateKey = "";
