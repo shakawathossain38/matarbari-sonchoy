@@ -1579,28 +1579,129 @@ initialize();
 
 // Live Clock and Calendar
 let homepageClockInterval = null;
-function updateHomepageClock(){
+let lastHijriDateKey = "";
+
+function getBanglaDate(year, month, day) {
+  const banglaMonths = [
+    "বৈশাখ", "জ্যৈষ্ঠ", "আষাঢ়", "শ্রাবণ",
+    "ভাদ্র", "আশ্বিন", "কার্তিক", "অগ্রহায়ণ",
+    "পৌষ", "মাঘ", "ফাল্গুন", "চৈত্র"
+  ];
+
+  const banglaYear = month >= 4
+    ? year - 593
+    : year - 594;
+
+  const start = new Date(Date.UTC(
+    month >= 4 ? year : year - 1, 3, 14
+  ));
+
+  const current = new Date(Date.UTC(year, month - 1, day));
+
+  let remaining = Math.floor(
+    (current - start) / 86400000
+  );
+
+  const leapYear = (banglaYear + 594) % 4 === 0 &&
+    ((banglaYear + 594) % 100 !== 0 ||
+    (banglaYear + 594) % 400 === 0);
+
+  const monthDays = [
+    31,31,31,31,31,31,
+    30,30,30,30,
+    leapYear ? 30 : 29,
+    30
+  ];
+
+  let index = 0;
+
+  while (remaining >= monthDays[index]) {
+    remaining -= monthDays[index];
+    index++;
+  }
+
+  const banglaNumber = new Intl.NumberFormat("bn-BD");
+
+  return `${banglaNumber.format(remaining + 1)} ${banglaMonths[index]} ${banglaNumber.format(banglaYear)}`;
+}
+
+async function updateHomepageClock() {
   const now = new Date();
 
-  // প্রকৃত খ্রিস্টাব্দ
-  const english = new Intl.DateTimeFormat("en-GB", {
+  const parts = new Intl.DateTimeFormat("en-GB", {
     timeZone: "Asia/Dhaka",
-    weekday: "long",
-    day: "numeric",
-    month: "long",
+    day: "2-digit",
+    month: "2-digit",
     year: "numeric"
-  }).format(now);
+  }).formatToParts(now);
 
-  $("englishDate").textContent = "খ্রিস্টাব্দ: " + english;
+  const getPart = type =>
+    Number(parts.find(p => p.type === type).value);
 
-  // বাংলাদেশের সরকারি বাংলা ক্যালেন্ডার
-  const bangla = new Intl.DateTimeFormat("bn-BD-u-ca-beng", {
-    timeZone: "Asia/Dhaka",
-    day: "numeric",
-    month: "long",
-    year: "numeric"
-  }).format(now);
+  const day = getPart("day");
+  const month = getPart("month");
+  const year = getPart("year");
 
+  $("liveClock").textContent =
+    new Intl.DateTimeFormat("bn-BD", {
+      timeZone: "Asia/Dhaka",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: true
+    }).format(now);
+
+  $("englishDate").textContent =
+    "খ্রিস্টাব্দ: " +
+    new Intl.DateTimeFormat("en-GB", {
+      timeZone: "Asia/Dhaka",
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+      year: "numeric"
+    }).format(now);
+
+  $("banglaDate").textContent =
+    "বঙ্গাব্দ: " + getBanglaDate(year, month, day);
+
+  const dateKey = `${day}-${month}-${year}`;
+
+  if (lastHijriDateKey !== dateKey) {
+    lastHijriDateKey = dateKey;
+
+    try {
+      const response = await fetch(
+        `https://api.aladhan.com/v1/gToH/${dateKey}?calendarMethod=UAQ`
+      );
+
+      if (!response.ok) throw new Error("Hijri API error");
+
+      const result = await response.json();
+
+      if (result.code !== 200) throw new Error("Invalid date");
+
+      const h = result.data.hijri;
+
+      const hijriMonths = [
+        "মুহাররম", "সফর", "রবিউল আউয়াল",
+        "রবিউস সানি", "জমাদিউল আউয়াল",
+        "জমাদিউস সানি", "রজব", "শাবান",
+        "রমজান", "শাওয়াল", "জিলকদ",
+        "জিলহজ"
+      ];
+
+      const bn = new Intl.NumberFormat("bn-BD");
+
+      $("hijriDate").textContent =
+        `হিজরি: ${bn.format(Number(h.day))} ${hijriMonths[h.month.number - 1]} ${bn.format(Number(h.year))} হিজরি`;
+
+    } catch (error) {
+      $("hijriDate").textContent =
+        "হিজরি: তারিখ লোড করা যায়নি";
+      lastHijriDateKey = "";
+    }
+  }
+}
   $("banglaDate").textContent = "বঙ্গাব্দ: " + bangla;
 
   // হিজরি ক্যালেন্ডার
