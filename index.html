@@ -310,12 +310,92 @@ async function loadNoticeTicker(){
 
   ticker.textContent = data.map(n => n.title).join("  ✦  ");
 }
+async function loadNotices(){
+  const area = $("noticeList");
+  if(!area) return;
 
+  area.textContent = "নোটিশ লোড হচ্ছে...";
+
+  const {data,error} = await supabaseClient
+    .from("notices")
+    .select("*")
+    .order("created_at",{ascending:false});
+
+  if(error){
+    area.textContent = "নোটিশ লোড করা যায়নি: " + error.message;
+    return;
+  }
+
+  if(!data || data.length === 0){
+    area.textContent = "বর্তমানে কোনো নোটিশ নেই";
+    return;
+  }
+
+  area.innerHTML = "";
+
+  data.forEach(notice => {
+    const item = document.createElement("div");
+    item.className = "notice-item";
+
+    const title = document.createElement("h4");
+    title.textContent = notice.title;
+
+    const content = document.createElement("p");
+    content.textContent = notice.content;
+
+    item.appendChild(title);
+    item.appendChild(content);
+    area.appendChild(item);
+  });
+}
+  
   function showNoticeForm(){
   const form = document.getElementById("adminNoticeForm");
 
   if(form){
     form.classList.toggle("hidden", currentRole !== "admin");
+  }
+  }
+  
+  async function addNotice(){
+  if(currentRole !== "admin"){
+    alert("শুধু অ্যাডমিন নোটিশ প্রকাশ করতে পারবেন");
+    return;
+  }
+
+  const title = $("noticeTitle").value.trim();
+  const content = $("noticeContent").value.trim();
+
+  if(!title || !content){
+    $("noticeMsg").textContent = "শিরোনাম ও বিবরণ লিখুন";
+    return;
+  }
+
+  const btn = document.querySelector("#adminNoticeForm button");
+  btn.disabled = true;
+
+  try{
+    const {error} = await supabaseClient
+      .from("notices")
+      .insert({
+        title,
+        content,
+        created_by: currentUser.id
+      });
+
+    if(error) throw error;
+
+    $("noticeTitle").value = "";
+    $("noticeContent").value = "";
+    $("noticeMsg").textContent = "নোটিশ সফলভাবে প্রকাশ হয়েছে";
+
+    await loadNoticeTicker();
+    await loadNotices();
+
+  }catch(error){
+    $("noticeMsg").textContent = "প্রকাশ ব্যর্থ: " + error.message;
+  }finally{
+    btn.disabled = false;
   }
   }
                                                                 
