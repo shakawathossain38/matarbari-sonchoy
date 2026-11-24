@@ -1582,38 +1582,45 @@ let homepageClockInterval = null;
 function updateHomepageClock(){
   const now = new Date();
 
-  $("liveClock").textContent = new Intl.DateTimeFormat("bn-BD", {
-    timeZone:"Asia/Dhaka",
-    hour:"2-digit",
-    minute:"2-digit",
-    second:"2-digit",
-    hour12:true
+  // প্রকৃত খ্রিস্টাব্দ
+  const english = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Asia/Dhaka",
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric"
   }).format(now);
 
-  $("englishDate").textContent = "English: " +
-    new Intl.DateTimeFormat("en-BD", {
-      timeZone:"Asia/Dhaka",
-      weekday:"long",
-      day:"numeric",
-      month:"long",
-      year:"numeric"
-    }).format(now);
+  $("englishDate").textContent = "খ্রিস্টাব্দ: " + english;
 
-  $("banglaDate").textContent = "বাংলা: " +
-    new Intl.DateTimeFormat("bn-BD-u-ca-beng", {
-      timeZone:"Asia/Dhaka",
-      day:"numeric",
-      month:"long",
-      year:"numeric"
-    }).format(now);
+  // বাংলাদেশের সরকারি বাংলা ক্যালেন্ডার
+  const bangla = new Intl.DateTimeFormat("bn-BD-u-ca-beng", {
+    timeZone: "Asia/Dhaka",
+    day: "numeric",
+    month: "long",
+    year: "numeric"
+  }).format(now);
 
-  $("hijriDate").textContent = "হিজরি: " +
-    new Intl.DateTimeFormat("bn-BD-u-ca-islamic-umalqura", {
-      timeZone:"Asia/Dhaka",
-      day:"numeric",
-      month:"long",
-      year:"numeric"
-    }).format(now);
+  $("banglaDate").textContent = "বঙ্গাব্দ: " + bangla;
+
+  // হিজরি ক্যালেন্ডার
+  const hijri = new Intl.DateTimeFormat("bn-BD-u-ca-islamic-umalqura", {
+    timeZone: "Asia/Dhaka",
+    day: "numeric",
+    month: "long",
+    year: "numeric"
+  }).format(now);
+
+  $("hijriDate").textContent = "হিজরি: " + hijri;
+
+  // বাংলাদেশ সময়
+  $("liveClock").textContent = new Intl.DateTimeFormat("bn-BD", {
+    timeZone: "Asia/Dhaka",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: true
+  }).format(now);
 }
 
 function startHomepageClock(){
