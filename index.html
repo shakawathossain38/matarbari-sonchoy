@@ -878,9 +878,9 @@ function showHomePage(){
     const el = $(page);
     if(el) el.classList.add("hidden");
   });
-
-  $("homeWelcome").classList.remove("hidden");
-  $("memberMenu").classList.remove("hidden");
+$("homeWelcome").classList.remove("hidden");
+$("memberMenu").classList.remove("hidden");
+$("memberMenu").style.display = "block";
 
   window.scrollTo({top:0,behavior:"smooth"});
 }
