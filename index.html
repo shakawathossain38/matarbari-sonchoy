@@ -111,6 +111,114 @@ footer{text-align:center;padding:20px;color:var(--muted);font-size:12px}
 .menu-item:active{
   transform:scale(.96);
 }
+  
+/* Member Profile Design */
+.profile-header{
+  text-align:center;
+  background:linear-gradient(135deg,#145c42,#21865f);
+  color:white;
+  padding:28px 15px;
+  border-radius:16px;
+  margin:18px 0;
+}
+
+.profile-avatar{
+  width:100px;
+  height:100px;
+  border-radius:50%;
+  border:4px solid white;
+  margin:0 auto 12px;
+  background:#e8f5ee;
+  color:#145c42;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:42px;
+  overflow:hidden;
+}
+
+.profile-avatar img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+
+.profile-header h2{
+  margin:8px 0;
+  font-size:22px;
+}
+
+.profile-header p{
+  margin:5px 0;
+  font-size:14px;
+}
+
+.profile-accordion{
+  display:flex;
+  flex-direction:column;
+  gap:13px;
+  margin:18px 0;
+}
+
+.profile-accordion details{
+  background:white;
+  border:1px solid #dce9e1;
+  border-radius:12px;
+  overflow:hidden;
+}
+
+.profile-accordion summary{
+  padding:17px;
+  cursor:pointer;
+  font-weight:bold;
+  color:#145c42;
+  list-style:none;
+  position:relative;
+  padding-right:45px;
+}
+
+.profile-accordion summary::-webkit-details-marker{
+  display:none;
+}
+
+.profile-accordion summary::after{
+  content:"⌄";
+  position:absolute;
+  right:18px;
+  font-size:22px;
+  top:12px;
+}
+
+.profile-accordion details[open] summary::after{
+  content:"⌃";
+}
+
+.profile-accordion summary span{
+  display:block;
+  font-size:12px;
+  color:#777;
+  font-weight:normal;
+  margin-top:4px;
+}
+
+.profile-info{
+  padding:5px 17px 15px;
+  border-top:1px solid #edf1ee;
+}
+
+.profile-info p{
+  padding:10px 0;
+  margin:0;
+  border-bottom:1px solid #edf1ee;
+  font-size:14px;
+  color:#555;
+}
+
+.profile-info strong{
+  color:#222;
+  font-weight:600;
+  }
+  
 </style>
 
 <script src="https://unpkg.com/lucide@latest"></script>
@@ -167,23 +275,88 @@ footer{text-align:center;padding:20px;color:var(--muted);font-size:12px}
 </section>
 
 <section id="memberProfileArea" class="card">
+
   <button class="secondary" onclick="showHomePage()">
-  ← হোমে ফিরুন
+    ← হোমে ফিরুন
   </button>
-<div id="memberProfileView" class="hidden"><div class="section-title"><h3>আমার সদস্য প্রোফাইল</h3></div><div id="memberProfileDetails"></div></div>
-<div id="memberProfileForm" class="hidden">
-<h3>সদস্য প্রোফাইল তৈরি করুন</h3>
-<label>প্রোফাইল ছবি</label><input type="file" id="profilePhoto" accept="image/jpeg,image/png,image/webp">
-<label>সম্পূর্ণ নাম</label><input id="profileFullName">
-<div class="form-grid">
-<div><label>পিতার নাম</label><input id="fatherName"></div><div><label>মাতার নাম</label><input id="motherName"></div>
-<div><label>জন্ম তারিখ</label><input id="dateOfBirth" type="date"></div><div><label>রক্তের গ্রুপ</label><select id="bloodGroup"><option value="">নির্বাচন করুন</option><option>A+</option><option>A-</option><option>B+</option><option>B-</option><option>AB+</option><option>AB-</option><option>O+</option><option>O-</option></select></div>
-<div><label>মোবাইল নম্বর</label><input id="profilePhone" type="tel"></div><div><label>শিক্ষাগত যোগ্যতা</label><input id="profileEducation"></div>
-<div><label>পেশা</label><input id="profileOccupation"></div><div><label>ঠিকানা</label><input id="profileAddress"></div>
-</div>
-<label>নিজের সম্পর্কে</label><textarea id="profileAbout"></textarea>
-<button id="saveMemberProfile">প্রোফাইল সংরক্ষণ</button><p id="profileMessage" class="message"></p>
-</div>
+
+  <div id="memberProfileView" class="hidden">
+
+    <div class="profile-header">
+      <div id="profileHeaderPhoto" class="profile-avatar">👤</div>
+      <h2 id="profileHeaderName">সদস্যের নাম</h2>
+      <p>Member ID: <span id="profileHeaderCode">—</span></p>
+    </div>
+
+    <div class="profile-accordion">
+
+      <details open>
+        <summary>Academic Information <span>শিক্ষাগত তথ্য</span></summary>
+        <div class="profile-info">
+          <p>শিক্ষাগত যোগ্যতা: <strong id="viewEducation">—</strong></p>
+          <p>পেশা: <strong id="viewOccupation">—</strong></p>
+        </div>
+      </details>
+
+      <details>
+        <summary>Personal Information <span>ব্যক্তিগত তথ্য</span></summary>
+        <div class="profile-info">
+          <p>সম্পূর্ণ নাম: <strong id="viewFullName">—</strong></p>
+          <p>জন্ম তারিখ: <strong id="viewDob">—</strong></p>
+          <p>রক্তের গ্রুপ: <strong id="viewBloodGroup">—</strong></p>
+          <p>মোবাইল: <strong id="viewPhone">—</strong></p>
+          <p>ঠিকানা: <strong id="viewAddress">—</strong></p>
+          <p>নিজের সম্পর্কে: <strong id="viewAbout">—</strong></p>
+        </div>
+      </details>
+
+      <details>
+        <summary>Guardian Information <span>অভিভাবকের তথ্য</span></summary>
+        <div class="profile-info">
+          <p>পিতার নাম: <strong id="viewFatherName">—</strong></p>
+          <p>মাতার নাম: <strong id="viewMotherName">—</strong></p>
+        </div>
+      </details>
+
+    </div>
+  </div>
+
+  <div id="memberProfileForm" class="hidden">
+    <h3>সদস্য প্রোফাইল তৈরি করুন</h3>
+
+    <label>প্রোফাইল ছবি</label>
+    <input type="file" id="profilePhoto" accept="image/jpeg,image/png,image/webp">
+
+    <label>সম্পূর্ণ নাম</label>
+    <input id="profileFullName">
+
+    <div class="form-grid">
+      <div><label>পিতার নাম</label><input id="fatherName"></div>
+      <div><label>মাতার নাম</label><input id="motherName"></div>
+      <div><label>জন্ম তারিখ</label><input id="dateOfBirth" type="date"></div>
+      <div>
+        <label>রক্তের গ্রুপ</label>
+        <select id="bloodGroup">
+          <option value="">নির্বাচন করুন</option>
+          <option>A+</option><option>A-</option>
+          <option>B+</option><option>B-</option>
+          <option>AB+</option><option>AB-</option>
+          <option>O+</option><option>O-</option>
+        </select>
+      </div>
+      <div><label>মোবাইল নম্বর</label><input id="profilePhone" type="tel"></div>
+      <div><label>শিক্ষাগত যোগ্যতা</label><input id="profileEducation"></div>
+      <div><label>পেশা</label><input id="profileOccupation"></div>
+      <div><label>ঠিকানা</label><input id="profileAddress"></div>
+    </div>
+
+    <label>নিজের সম্পর্কে</label>
+    <textarea id="profileAbout"></textarea>
+
+    <button id="saveMemberProfile">প্রোফাইল সংরক্ষণ</button>
+    <p id="profileMessage" class="message"></p>
+  </div>
+
 </section>
 
 
@@ -454,18 +627,83 @@ showHomePage();
   lucide.createIcons();
 }
 
+
 async function loadMemberProfile(){
- const {data,error}=await supabaseClient.from("member_profiles").select("*").eq("user_id",currentUser.id).maybeSingle();
- if(error){showMessage("profileMessage",error.message,"error");return}
- if(!data){$("memberProfileView").classList.add("hidden");$("memberProfileForm").classList.remove("hidden");$("profileFullName").value=currentProfile.full_name||"";return}
- $("memberProfileForm").classList.add("hidden");$("memberProfileView").classList.remove("hidden");
- const photo=await signedPhoto(data.photo_path);
- $("memberProfileDetails").innerHTML=`<div class="profile-head">${photo?`<img class="profile-photo large" src="${photo}" alt="প্রোফাইল">`:""}<div class="profile-meta"><h3>${escapeHTML(data.full_name)}</h3><p>${escapeHTML(data.phone)}</p><p>সদস্য পরিচিতি</p></div></div>
- <p><b>পিতার নাম:</b> ${escapeHTML(data.father_name)}</p><p><b>মাতার নাম:</b> ${escapeHTML(data.mother_name)}</p><p><b>জন্ম তারিখ:</b> ${escapeHTML(data.date_of_birth)}</p><p><b>রক্তের গ্রুপ:</b> ${escapeHTML(data.blood_group)}</p><p><b>ঠিকানা:</b> ${escapeHTML(data.address)}</p><p><b>শিক্ষা:</b> ${escapeHTML(data.education)}</p><p><b>পেশা:</b> ${escapeHTML(data.occupation)}</p><p><b>নিজের সম্পর্কে:</b> ${escapeHTML(data.about)}</p><p class="small">সদস্য হওয়ার তারিখ: ${escapeHTML(data.join_date)}</p>`;
- $("summaryName").textContent=data.full_name||"";$("summaryPhone").textContent=data.phone||"";
- const dir=await supabaseClient.from("member_directory").select("member_code").eq("auth_user_id",currentUser.id).maybeSingle();
- $("summaryCode").textContent=dir.data?.member_code||"সদস্য";
- if(photo){$("summaryPhoto").src=photo;$("summaryPhoto").classList.remove("hidden")}else $("summaryPhoto").classList.add("hidden");
+  const {data,error}=await supabaseClient
+    .from("member_profiles")
+    .select("*")
+    .eq("user_id",currentUser.id)
+    .maybeSingle();
+
+  if(error){
+    showMessage("profileMessage",error.message,"error");
+    return;
+  }
+
+  if(!data){
+    $("memberProfileView").classList.add("hidden");
+    $("memberProfileForm").classList.remove("hidden");
+    $("profileFullName").value=currentProfile.full_name||"";
+    return;
+  }
+
+  $("memberProfileForm").classList.add("hidden");
+  $("memberProfileView").classList.remove("hidden");
+
+  const photo=await signedPhoto(data.photo_path);
+
+  // Profile photo
+  const avatar=$("profileHeaderPhoto");
+  avatar.innerHTML="👤";
+
+  if(photo){
+    const img=document.createElement("img");
+    img.src=photo;
+    img.alt="প্রোফাইল ছবি";
+    avatar.replaceChildren(img);
+  }
+
+  // Member name
+  $("profileHeaderName").textContent=data.full_name||"";
+
+  // Member ID
+  const dir=await supabaseClient
+    .from("member_directory")
+    .select("member_code")
+    .eq("auth_user_id",currentUser.id)
+    .maybeSingle();
+
+  const memberCode=dir.data?.member_code||"সদস্য";
+
+  $("profileHeaderCode").textContent=memberCode;
+
+  // Academic Information
+  $("viewEducation").textContent=data.education||"তথ্য নেই";
+  $("viewOccupation").textContent=data.occupation||"তথ্য নেই";
+
+  // Personal Information
+  $("viewFullName").textContent=data.full_name||"তথ্য নেই";
+  $("viewDob").textContent=data.date_of_birth||"তথ্য নেই";
+  $("viewBloodGroup").textContent=data.blood_group||"তথ্য নেই";
+  $("viewPhone").textContent=data.phone||"তথ্য নেই";
+  $("viewAddress").textContent=data.address||"তথ্য নেই";
+  $("viewAbout").textContent=data.about||"তথ্য নেই";
+
+  // Guardian Information
+  $("viewFatherName").textContent=data.father_name||"তথ্য নেই";
+  $("viewMotherName").textContent=data.mother_name||"তথ্য নেই";
+
+  // Existing dashboard summary
+  $("summaryName").textContent=data.full_name||"";
+  $("summaryPhone").textContent=data.phone||"";
+  $("summaryCode").textContent=memberCode;
+
+  if(photo){
+    $("summaryPhoto").src=photo;
+    $("summaryPhoto").classList.remove("hidden");
+  }else{
+    $("summaryPhoto").classList.add("hidden");
+  }
 }
 
 
