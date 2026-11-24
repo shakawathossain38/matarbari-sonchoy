@@ -879,7 +879,7 @@ function showHomePage(){
     const el = $(page);
     if(el) el.classList.add("hidden");
   });
-$("homeWelcome").classList.remove("hidden");
+$("welcome").closest(".card").classList.remove("hidden");
 $("memberMenu").classList.remove("hidden");
 $("memberMenu").style.display = "block";
 
