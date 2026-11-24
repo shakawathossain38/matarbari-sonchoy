@@ -135,7 +135,25 @@ footer{text-align:center;padding:20px;color:var(--muted);font-size:12px}
 <h3>সদস্য লগইন</h3>
 <label>সদস্য আইডি অথবা অ্যাডমিন ইমেইল</label><input id="loginId" placeholder="যেমন: MSH001" autocomplete="username">
 <label>পাসওয়ার্ড</label><input id="password" type="password" placeholder="পাসওয়ার্ড" autocomplete="current-password">
-<button id="loginBtn">লগইন</button><p id="loginMsg" class="message"></p>
+<button id="loginBtn">লগইন</button><button type="button" class="secondary" onclick="showForgotPassword()">
+  পাসওয়ার্ড ভুলে গেছেন?
+</button><p id="loginMsg" class="message"></p>
+  <div id="forgotPasswordArea" class="hidden">
+  <h3>পাসওয়ার্ড পুনরুদ্ধার</h3>
+
+  <label>সদস্য আইডি অথবা অ্যাডমিন ইমেইল</label>
+  <input id="recoveryId" placeholder="MSH001 অথবা অ্যাডমিন ইমেইল">
+
+  <button type="button" onclick="submitPasswordRecovery()">
+    অনুরোধ পাঠান
+  </button>
+
+  <button type="button" class="secondary" onclick="hideForgotPassword()">
+    ফিরে যান
+  </button>
+
+  <p id="recoveryMsg" class="message"></p>
+  </div>
 </section>
 
 <section id="dashboard" class="hidden">
@@ -316,6 +334,21 @@ footer{text-align:center;padding:20px;color:var(--muted);font-size:12px}
 </div>
 </section>
 </section>
+  <section class="card hidden" id="resetPasswordPage">
+  <h3>নতুন পাসওয়ার্ড সেট করুন</h3>
+
+  <label>নতুন পাসওয়ার্ড</label>
+  <input id="newPassword" type="password" placeholder="নতুন পাসওয়ার্ড">
+
+  <label>পাসওয়ার্ড আবার লিখুন</label>
+  <input id="confirmPassword" type="password" placeholder="পাসওয়ার্ড নিশ্চিত করুন">
+
+  <button type="button" onclick="updateNewPassword()">
+    পাসওয়ার্ড পরিবর্তন করুন
+  </button>
+
+  <p id="resetPasswordMsg" class="message"></p>
+  </section>
 </main>
 <footer>মাতারবাড়ী সঞ্চয় ও ঐক্য সংঘ</footer>
 <nav id="bottomNav" class="bottom-nav hidden">
@@ -345,8 +378,27 @@ async function signIn(){
  catch(e){showMessage("loginMsg","লগইন ব্যর্থ: "+e.message,"error")}
  finally{$("loginBtn").disabled=false}
 }
-async function initialize(){const {data}=await supabaseClient.auth.getSession();if(data.session){currentUser=data.session.user;await loadDashboard()}}
+async function initialize(){
+  const {data, error} = await supabaseClient.auth.getSession();
 
+  if(error){
+    console.error(error);
+    return;
+  }
+
+  const session = data.session;
+
+  if(passwordRecoveryMode || window.location.hash.includes("type=recovery")){
+    $("login").classList.add("hidden");
+    $("resetPasswordPage").classList.remove("hidden");
+    return;
+  }
+
+  if(session){
+    currentUser = session.user;
+    await loadDashboard();
+  }
+}
 async function loadDashboard(){
   if(!currentUser)return;
 
@@ -947,8 +999,104 @@ document.querySelectorAll(".bottom-nav button").forEach(btn => {
 });
 
 // Digital Icons
-lucide.createIcons();
+  function showForgotPassword(){
+  $("forgotPasswordArea").classList.remove("hidden");
+  $("loginMsg").textContent = "";
+  $("recoveryMsg").textContent = "";
+}
 
+function hideForgotPassword(){
+  $("forgotPasswordArea").classList.add("hidden");
+  $("recoveryId").value = "";
+  $("recoveryMsg").textContent = "";
+}
+lucide.createIcons();
+async function submitPasswordRecovery(){
+  const recoveryId = $("recoveryId").value.trim();
+  const msg = $("recoveryMsg");
+
+  if(!recoveryId){
+    msg.textContent = "সদস্য আইডি অথবা ইমেইল লিখুন।";
+    msg.className = "message error";
+    return;
+  }
+
+  if(recoveryId.includes("@")){
+    const {error} = await supabaseClient.auth
+      .resetPasswordForEmail(recoveryId, {
+        redirectTo: "https://shakawathossain38.github.io/matarbari-sonchoy/"
+      });
+
+    if(error){
+      msg.textContent = "রিসেট লিংক পাঠানো যায়নি: " + error.message;
+      msg.className = "message error";
+      return;
+    }
+
+    msg.textContent = "আপনার ইমেইলে রিসেট লিংক পাঠানো হয়েছে।";
+    msg.className = "message success";
+    return;
+  }
+
+  msg.textContent = "সদস্যের অনুরোধ ব্যবস্থা পরের ধাপে যুক্ত হবে।";
+  msg.className = "message";
+}
+  async function updateNewPassword(){
+  const password = $("newPassword").value;
+  const confirm = $("confirmPassword").value;
+  const msg = $("resetPasswordMsg");
+
+  if(password.length < 6){
+    msg.textContent = "পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে।";
+    msg.className = "message error";
+    return;
+  }
+
+  if(password !== confirm){
+    msg.textContent = "দুটি পাসওয়ার্ড মিলছে না।";
+    msg.className = "message error";
+    return;
+  }
+
+  const {error} = await supabaseClient.auth.updateUser({
+    password: password
+  });
+
+  if(error){
+    msg.textContent = "পাসওয়ার্ড পরিবর্তন হয়নি: " + error.message;
+    msg.className = "message error";
+    return;
+  }
+
+  msg.textContent = "পাসওয়ার্ড সফলভাবে পরিবর্তন হয়েছে।";
+  msg.className = "message success";
+
+    $("newPassword").value = "";
+  $("confirmPassword").value = "";
+
+  await supabaseClient.auth.signOut();
+
+  $("resetPasswordPage").classList.add("hidden");
+  $("login").classList.remove("hidden");
+
+  msg.textContent = "এখন নতুন পাসওয়ার্ড দিয়ে লগইন করুন।";
+  }
+  // Password Recovery Event
+let passwordRecoveryMode = false;
+
+supabaseClient.auth.onAuthStateChange((event, session) => {
+  if(event === "PASSWORD_RECOVERY" && session){
+    passwordRecoveryMode = true;
+    currentUser = session.user;
+
+    $("login").classList.add("hidden");
+
+    const dashboard = $("dashboard");
+    if(dashboard) dashboard.classList.add("hidden");
+
+    $("resetPasswordPage").classList.remove("hidden");
+  }
+});
 // Website চালু
 initialize();
 </script>
