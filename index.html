@@ -197,6 +197,10 @@ footer{text-align:center;padding:20px;color:var(--muted);font-size:12px}
       <i data-lucide="user-round" class="digital-icon"></i>
       <span>আমার প্রোফাইল</span>
     </div>
+    <div class="menu-item hidden" id="adminMenuItem" data-target="admin">
+  <i data-lucide="shield-check" class="digital-icon"></i>
+  <span>অ্যাডমিন প্যানেল</span>
+    </div>
   </div>
 </section>
 
@@ -209,7 +213,14 @@ footer{text-align:center;padding:20px;color:var(--muted);font-size:12px}
 <div class="stat"><span>বর্তমান ব্যালেন্স</span><strong id="balance">৳ ০</strong></div>
 </div>
 </section>
-
+<!-- এখানে নতুন কোড বসাবে -->
+<section class="card hidden" id="balanceCard">
+  <h3>আমার বর্তমান ব্যালেন্স</h3>
+  <div class="stat">
+    <span>বর্তমান ব্যালেন্স</span>
+    <strong id="balanceOnly">৳ ০</strong>
+  </div>
+</section>
 <section class="card" id="recordsCard">
   <h3>লেনদেনের বিবরণ</h3>
   <div class="table-wrap">
@@ -316,23 +327,59 @@ async function signIn(){
  finally{$("loginBtn").disabled=false}
 }
 async function initialize(){const {data}=await supabaseClient.auth.getSession();if(data.session){currentUser=data.session.user;await loadDashboard()}}
+
 async function loadDashboard(){
- if(!currentUser)return;
- const {data:profile,error}=await supabaseClient.from("profiles").select("*").eq("id",currentUser.id).single();
- if(error||!profile){alert("অ্যাকাউন্ট প্রোফাইল পাওয়া যায়নি: "+(error?.message||""));return}
- currentProfile=profile;currentRole=profile.role;
- $("login").classList.add("hidden");$("dashboard").classList.remove("hidden");$("bottomNav").classList.remove("hidden");
- $("welcome").textContent="স্বাগতম, "+(profile.full_name||currentUser.email);
- const isAdmin=currentRole==="admin";
- $("admin").classList.toggle("hidden",!isAdmin);
- $("memberMenu").classList.toggle("hidden",isAdmin);
- $("memberProfileArea").classList.toggle("hidden",isAdmin);
- $("memberSummary").classList.toggle("hidden",isAdmin);
+  if(!currentUser)return;
+
+  const {data:profile,error}=await supabaseClient
+    .from("profiles")
+    .select("*")
+    .eq("id",currentUser.id)
+    .single();
+
+  if(error||!profile){
+    alert("অ্যাকাউন্ট প্রোফাইল পাওয়া যায়নি: "+(error?.message||""));
+    return;
+  }
+
+  currentProfile=profile;
+  currentRole=profile.role;
+
+  $("login").classList.add("hidden");
+  $("dashboard").classList.remove("hidden");
+  $("bottomNav").classList.remove("hidden");
+
+  $("welcome").textContent="স্বাগতম, "+(profile.full_name||currentUser.email);
+
+  const isAdmin=currentRole==="admin";
+  $("adminMenuItem").classList.toggle("hidden", !isAdmin);
+
+  // Both admin and members can see the service menu
+  $("memberMenu").classList.remove("hidden");
+
+  // Admin panel remains admin-only
+  $("admin").classList.toggle("hidden",!isAdmin);
+
+  // Show personal profile and summary
+
   showNoticeForm();
-await loadNoticeTicker();
- if(isAdmin){await loadAdminMembers();await loadAdminProfiles();await loadTransactions()}
- else{await loadMemberProfile();await loadTransactions()}
+
+  await loadNoticeTicker();
+  await loadNotices();
+
+  if(isAdmin){
+    await loadAdminMembers();
+    await loadAdminProfiles();
+    await loadMemberProfile();
+    await loadTransactions();
+  }else{
+    await loadMemberProfile();
+    await loadTransactions();
+  }
+
+  lucide.createIcons();
 }
+
 async function loadMemberProfile(){
  const {data,error}=await supabaseClient.from("member_profiles").select("*").eq("user_id",currentUser.id).maybeSingle();
  if(error){showMessage("profileMessage",error.message,"error");return}
@@ -579,6 +626,7 @@ async function loadTransactions(){
   if($("totalDeposit")) $("totalDeposit").textContent = taka(deposit);
   if($("totalWithdraw")) $("totalWithdraw").textContent = taka(withdraw);
   if($("balance")) $("balance").textContent = taka(deposit-withdraw);
+  if($("balanceOnly")) $("balanceOnly").textContent = taka(deposit-withdraw);
 }
 
 
@@ -766,13 +814,88 @@ async function saveAdminProfileEdit(){
  showMessage("editMessage","সদস্যের প্রোফাইল আপডেট হয়েছে");await loadAdminProfiles()
  }catch(e){showMessage("editMessage","আপডেট হয়নি: "+e.message,"error")}finally{$("saveAdminEditBtn").disabled=false}
 }
-async function signOut(){await supabaseClient.auth.signOut();currentUser=null;currentRole=null;currentProfile=null;$("dashboard").classList.add("hidden");$("bottomNav").classList.add("hidden");$("login").classList.remove("hidden");$("password").value="";$("loginMsg").textContent=""}
 
-$("loginBtn").addEventListener("click",signIn);$("logoutBtn").addEventListener("click",signOut);$("saveMemberProfile").addEventListener("click",saveMemberProfile);$("createAccountBtn").addEventListener("click",createMemberAccount);$("resetPasswordBtn").addEventListener("click",resetMemberPassword);$("transactionBtn").addEventListener("click",addTransaction);$("saveAdminEditBtn").addEventListener("click",saveAdminProfileEdit);$("closeEditBtn").addEventListener("click",()=>$("adminEditCard").classList.add("hidden"));
-document.querySelectorAll(".menu-item").forEach(item=>item.addEventListener("click",()=>{const target=$(item.dataset.target);if(target){target.scrollIntoView({behavior:"smooth",block:"start"})}}));
-document.querySelectorAll(".bottom-nav button").forEach(btn=>btn.addEventListener("click",()=>{document.querySelectorAll(".bottom-nav button").forEach(b=>b.classList.remove("active"));btn.classList.add("active");const key=btn.dataset.nav;if(key==="home")window.scrollTo({top:0,behavior:"smooth"});if(key==="notice")$("noticeCard").scrollIntoView({behavior:"smooth"});if(key==="menu")$("memberMenu").scrollIntoView({behavior:"smooth"})}));
+async function signOut(){
+  await supabaseClient.auth.signOut();
+
+  currentUser = null;
+  currentRole = null;
+  currentProfile = null;
+
+  $("dashboard").classList.add("hidden");
+  $("bottomNav").classList.add("hidden");
+  $("login").classList.remove("hidden");
+
+  $("password").value = "";
+  $("loginMsg").textContent = "";
+}
+
+// Login ও অন্যান্য বাটনের Event Listener
+$("loginBtn").addEventListener("click", signIn);
+$("logoutBtn").addEventListener("click", signOut);
+$("saveMemberProfile").addEventListener("click", saveMemberProfile);
+$("createAccountBtn").addEventListener("click", createMemberAccount);
+$("resetPasswordBtn").addEventListener("click", resetMemberPassword);
+$("transactionBtn").addEventListener("click", addTransaction);
+$("saveAdminEditBtn").addEventListener("click", saveAdminProfileEdit);
+
+$("closeEditBtn").addEventListener("click", () => {
+  $("adminEditCard").classList.add("hidden");
+});
+
+// সার্ভিস মেনুর ক্লিক
+document.querySelectorAll(".menu-item").forEach(item => {
+  item.addEventListener("click", () => {
+    const target = $(item.dataset.target);
+
+    if(target){
+      target.scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+      });
+    }
+  });
+});
+
+// নিচের Navigation
+document.querySelectorAll(".bottom-nav button").forEach(btn => {
+  btn.addEventListener("click", () => {
+
+    document.querySelectorAll(".bottom-nav button").forEach(b => {
+      b.classList.remove("active");
+    });
+
+    btn.classList.add("active");
+
+    const key = btn.dataset.nav;
+
+    if(key === "home"){
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+      });
+    }
+
+    if(key === "notice"){
+      $("noticeCard").scrollIntoView({
+        behavior: "smooth"
+      });
+    }
+
+    if(key === "menu"){
+      $("memberMenu").scrollIntoView({
+        behavior: "smooth"
+      });
+    }
+  });
+});
+
+// Digital Icons
 lucide.createIcons();
-  initialize();
+
+// Website চালু
+initialize();
+
 </script>
 </body>
 </html>
