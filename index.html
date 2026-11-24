@@ -180,13 +180,11 @@ footer{text-align:center;padding:20px;color:var(--muted);font-size:12px}
       <i data-lucide="bell" class="digital-icon"></i>
       <span>নোটিশ</span>
     </div>
-
-    <div class="menu-item" data-target="recordsCard">
-      <i data-lucide="book-open" class="digital-icon"></i>
-      <span>লেনদেন</span>
-    </div>
-
-    <div class="menu-item" data-target="accountCard">
+<div class="menu-item" data-target="recordsCard">
+  <i data-lucide="book-open" class="digital-icon"></i>
+  <span>লেনদেন</span>
+</div>
+<div class="menu-item" data-target="balanceCard">
       <i data-lucide="chart-no-axes-combined" class="digital-icon"></i>
       <span>ব্যালেন্স চেক</span>
     </div>
@@ -283,6 +281,9 @@ footer{text-align:center;padding:20px;color:var(--muted);font-size:12px}
 </section>
 
 <section id="admin" class="hidden">
+  <button class="secondary" onclick="showHomePage()">
+  ← হোমে ফিরুন
+  </button>
 <div class="card"><h3>অ্যাডমিন: সদস্য অ্যাকাউন্ট তৈরি</h3>
 <label>সদস্যের নাম</label><input id="newMemberName">
 <label>মোবাইল নম্বর</label><input id="newMemberPhone" type="tel">
@@ -374,8 +375,10 @@ async function loadDashboard(){
   // Both admin and members can see the service menu
   $("memberMenu").classList.remove("hidden");
 
-  // Admin panel remains admin-only
-  $("admin").classList.toggle("hidden",!isAdmin);
+// Admin panel remains admin-only
+$("admin").classList.add("hidden");
+
+showHomePage();
 
   // Show personal profile and summary
 
@@ -832,6 +835,56 @@ async function saveAdminProfileEdit(){
  }catch(e){showMessage("editMessage","আপডেট হয়নি: "+e.message,"error")}finally{$("saveAdminEditBtn").disabled=false}
 }
 
+  function openServicePage(id){
+  if(id === "admin" && currentRole !== "admin") return;
+
+  const pages = [
+    "homeWelcome",
+    "memberMenu",
+    "memberProfileArea",
+    "accountCard",
+    "balanceCard",
+    "recordsCard",
+    "noticeCard",
+    "helpCard",
+    "admin"
+  ];
+
+  pages.forEach(page=>{
+    const el = $(page);
+    if(el) el.classList.add("hidden");
+  });
+
+  const target = $(id);
+  if(target) target.classList.remove("hidden");
+
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+
+function showHomePage(){
+  const pages = [
+    "homeWelcome",
+    "memberMenu",
+    "memberProfileArea",
+    "accountCard",
+    "balanceCard",
+    "recordsCard",
+    "noticeCard",
+    "helpCard",
+    "admin"
+  ];
+
+  pages.forEach(page=>{
+    const el = $(page);
+    if(el) el.classList.add("hidden");
+  });
+
+  $("homeWelcome").classList.remove("hidden");
+  $("memberMenu").classList.remove("hidden");
+
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+  
 async function signOut(){
   await supabaseClient.auth.signOut();
 
@@ -863,17 +916,9 @@ $("closeEditBtn").addEventListener("click", () => {
 // সার্ভিস মেনুর ক্লিক
 document.querySelectorAll(".menu-item").forEach(item => {
   item.addEventListener("click", () => {
-    const target = $(item.dataset.target);
-
-    if(target){
-      target.scrollIntoView({
-        behavior: "smooth",
-        block: "start"
-      });
-    }
+    openServicePage(item.dataset.target);
   });
 });
-
 // নিচের Navigation
 document.querySelectorAll(".bottom-nav button").forEach(btn => {
   btn.addEventListener("click", () => {
@@ -887,22 +932,15 @@ document.querySelectorAll(".bottom-nav button").forEach(btn => {
     const key = btn.dataset.nav;
 
     if(key === "home"){
-      window.scrollTo({
-        top: 0,
-        behavior: "smooth"
-      });
+      showHomePage();
     }
 
     if(key === "notice"){
-      $("noticeCard").scrollIntoView({
-        behavior: "smooth"
-      });
+      openServicePage("noticeCard");
     }
 
     if(key === "menu"){
-      $("memberMenu").scrollIntoView({
-        behavior: "smooth"
-      });
+      showHomePage();
     }
   });
 });
@@ -912,7 +950,6 @@ lucide.createIcons();
 
 // Website চালু
 initialize();
-
 </script>
 </body>
 </html>
