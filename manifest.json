@@ -1,7 +1,7 @@
 {
-  "name": "মাতারবাড়ী সঞ্চয় ও ঐক্য সংঘ",
-  "short_name": "সঞ্চয় সংঘ",
-  "description": "সঞ্চয়, ঐক্য ও উন্নয়ন",
+  "name": "Matarbari Savings and Unity Association",
+  "short_name": "MSUA",
+  "description": "Savings, Unity and Development",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
