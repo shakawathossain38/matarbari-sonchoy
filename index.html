@@ -147,6 +147,9 @@ footer{text-align:center;padding:20px;color:var(--muted);font-size:12px}
 </section>
 
 <section id="memberProfileArea" class="card hidden">
+  <button class="secondary" onclick="showHomePage()">
+  ← হোমে ফিরুন
+  </button>
 <div id="memberProfileView" class="hidden"><div class="section-title"><h3>আমার সদস্য প্রোফাইল</h3></div><div id="memberProfileDetails"></div></div>
 <div id="memberProfileForm" class="hidden">
 <h3>সদস্য প্রোফাইল তৈরি করুন</h3>
@@ -205,8 +208,11 @@ footer{text-align:center;padding:20px;color:var(--muted);font-size:12px}
 </section>
 
 
-<section class="card" id="accountCard">
+<section class="card hidden" id="accountCard">
 <h3>আমার সঞ্চয়ের হিসাব</h3>
+  <button class="secondary" onclick="showHomePage()">
+  ← হোমে ফিরুন
+  </button>
 <div class="stats">
 <div class="stat"><span>মোট জমা</span><strong id="totalDeposit">৳ ০</strong></div>
 <div class="stat"><span>মোট উত্তোলন</span><strong id="totalWithdraw">৳ ০</strong></div>
@@ -216,12 +222,18 @@ footer{text-align:center;padding:20px;color:var(--muted);font-size:12px}
 <!-- এখানে নতুন কোড বসাবে -->
 <section class="card hidden" id="balanceCard">
   <h3>আমার বর্তমান ব্যালেন্স</h3>
+  <button class="secondary" onclick="showHomePage()">
+  ← হোমে ফিরুন
+  </button>
   <div class="stat">
     <span>বর্তমান ব্যালেন্স</span>
     <strong id="balanceOnly">৳ ০</strong>
   </div>
 </section>
-<section class="card" id="recordsCard">
+<section class="card hidden" id="recordsCard">
+  <button class="secondary" onclick="showHomePage()">
+  ← হোমে ফিরুন
+  </button>
   <h3>লেনদেনের বিবরণ</h3>
   <div class="table-wrap">
     <table>
@@ -241,9 +253,11 @@ footer{text-align:center;padding:20px;color:var(--muted);font-size:12px}
 </section>
 
 
-<section class="card" id="noticeCard">
+<section class="card hidden" id="noticeCard">
   <h3>সংগঠনের নোটিশ</h3>
-
+<button class="secondary" onclick="showHomePage()">
+  ← হোমে ফিরুন
+</button>
   <div id="adminNoticeForm" class="hidden">
     <label>নোটিশের শিরোনাম</label>
     <input id="noticeTitle" type="text" placeholder="নোটিশের শিরোনাম লিখুন">
@@ -260,8 +274,11 @@ footer{text-align:center;padding:20px;color:var(--muted);font-size:12px}
   </div>
 </section>
 
-<section class="card" id="helpCard">
+<section class="card hidden" id="helpCard">
   <h3>যোগাযোগ</h3>
+  <button class="secondary" onclick="showHomePage()">
+  ← হোমে ফিরুন
+  </button>
   <p class="small">প্রয়োজনে সংগঠনের দায়িত্বশীল ব্যক্তির সঙ্গে যোগাযোগ করুন।</p>
 </section>
 
