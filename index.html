@@ -1565,6 +1565,15 @@ supabaseClient.auth.onAuthStateChange((event, session) => {
     $("resetPasswordPage").classList.remove("hidden");
   }
 });
+
+  // Register MSUA Service Worker
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./sw.js")
+      .then(() => console.log("MSUA App Ready"))
+      .catch(error => console.error("Service Worker Error:", error));
+  });
+}
 // Website চালু
 initialize();
 
