@@ -232,6 +232,38 @@ header p{
   color:#ffffff !important;
 }
   
+.contact-section{
+  background:#fff;
+  padding:18px;
+  border-radius:14px;
+  margin-top:15px;
+  border:1px solid #e5eee8;
+}
+
+.contact-item{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  padding:14px 0;
+  border-bottom:1px solid #e5eee8;
+}
+
+.contact-item:last-child{
+  border-bottom:none;
+}
+
+.contact-item strong{
+  color:#145c42;
+  font-size:14px;
+}
+
+.contact-item a{
+  color:#16734f;
+  text-decoration:none;
+  font-size:14px;
+  overflow-wrap:anywhere;
+  }
+  
 </style>
 
 <script src="https://unpkg.com/lucide@latest"></script>
@@ -478,13 +510,49 @@ header p{
   </div>
 </section>
 
+
 <section class="card" id="helpCard">
   <h3>যোগাযোগ</h3>
+
   <button class="secondary" onclick="showHomePage()">
-  ← হোমে ফিরুন
+    ← হোমে ফিরুন
   </button>
-  <p class="small">প্রয়োজনে সংগঠনের দায়িত্বশীল ব্যক্তির সঙ্গে যোগাযোগ করুন।</p>
+
+  <p class="small">
+    প্রয়োজনে সংগঠনের দায়িত্বশীল ব্যক্তির সঙ্গে যোগাযোগ করুন।
+  </p>
+
+  <div class="contact-section">
+
+    <div class="contact-item">
+      <strong>Facebook</strong>
+      <a href="https://www.facebook.com/msh.shakawat.h?mibextid=ZbWKwL" target="_blank" rel="noopener">
+        Facebook প্রোফাইল
+      </a>
+    </div>
+
+    <div class="contact-item">
+      <strong>WhatsApp</strong>
+      <a href="https://wa.me/qr/UGVHF5DG7ZXMG1?s=v" target="_blank" rel="noopener">
+        WhatsApp-এ যোগাযোগ
+      </a>
+    </div>
+
+    <div class="contact-item">
+      <strong>মোবাইল</strong>
+      <a href="tel:+8801923606138">+8801923606138</a>
+    </div>
+
+    <div class="contact-item">
+      <strong>ইমেইল</strong>
+      <a href="mailto:m.s.mediamatarbari@gmail.com">
+        m.s.mediamatarbari@gmail.com
+      </a>
+    </div>
+
+  </div>
 </section>
+
 
 <section id="admin" class="hidden">
   <button class="secondary" onclick="showHomePage()">
