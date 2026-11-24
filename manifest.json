@@ -1,0 +1,11 @@
+{
+  "name": "মাতারবাড়ী সঞ্চয় ও ঐক্য সংঘ",
+  "short_name": "সঞ্চয় সংঘ",
+  "description": "সঞ্চয়, ঐক্য ও উন্নয়ন",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#145c42",
+  "orientation": "portrait"
+}
