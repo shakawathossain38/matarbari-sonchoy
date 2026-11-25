@@ -2345,7 +2345,32 @@ if ("serviceWorker" in navigator) {
       );
   });
 }
+  
+// সেবা মেনুর ক্লিক ইভেন্ট
+document.querySelectorAll(".menu-item[data-target]").forEach(item => {
+  item.addEventListener("click", () => {
+    const targetId = item.dataset.target;
+    const target = $(targetId);
 
+    if (!target) {
+      alert("এই সেবাটি খুঁজে পাওয়া যায়নি।");
+      return;
+    }
+
+    // অ্যাডমিন প্যানেল শুধু অ্যাডমিনের জন্য
+    if (targetId === "admin" && currentRole !== "admin") {
+      alert("এই প্যানেল ব্যবহারের অনুমতি নেই।");
+      return;
+    }
+
+    target.classList.remove("hidden");
+
+    target.scrollIntoView({
+      behavior: "smooth",
+      block: "start"
+    });
+  });
+});
 // ------------------------------
 // ওয়েবসাইট চালু
 // ------------------------------
