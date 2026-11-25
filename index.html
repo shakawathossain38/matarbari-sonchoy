@@ -759,221 +759,619 @@ header p{
 
 <script>
 const SUPABASE_URL="https://bepgazqwgnulfwiljwsq.supabase.co";
-/* নিজের বর্তমান Supabase Publishable Key এখানে বসানো আছে। */
 const SUPABASE_KEY="sb_publishable_SPWLNOpT0VuH6ktRumSuZg_ZJnlYn10";
-const supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
-const $=id=>document.getElementById(id);
-let currentUser=null,currentRole=null,currentProfile=null;
 
-function showMessage(id,msg,type="success"){const el=$(id);el.textContent=msg;el.className="message "+type}
-function taka(n){return "৳ "+Number(n||0).toLocaleString("bn-BD")}
-function escapeHTML(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]))}
-function validMemberId(v){return /^MSH(?!000)\d{3,}$/i.test(v)}
-function photoExt(file){return file.type==="image/png"?"png":file.type==="image/webp"?"webp":"jpg"}
-async function signedPhoto(path){if(!path)return "";const {data}=await supabaseClient.storage.from("member-photos").createSignedUrl(path,3600);return data?.signedUrl||""}
+const supabaseClient=window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
+);
 
-async function signIn(){
- const loginId=$("loginId").value.trim(),password=$("password").value;
- if(!loginId||!password){showMessage("loginMsg","আইডি ও পাসওয়ার্ড দিন","error");return}
- $("loginBtn").disabled=true;let email=validMemberId(loginId)?loginId.toLowerCase()+"@members.matarbari.local":loginId;
- try{const {data,error}=await supabaseClient.auth.signInWithPassword({email,password});if(error)throw error;currentUser=data.user;await loadDashboard()}
- catch(e){showMessage("loginMsg","লগইন ব্যর্থ: "+e.message,"error")}
- finally{$("loginBtn").disabled=false}
+const $ = id => document.getElementById(id);
+
+let currentUser = null;
+let currentRole = null;
+let currentProfile = null;
+let homepageClockInterval = null;
+let passwordRecoveryMode = false;
+// ------------------------------
+// সাধারণ সহায়ক ফাংশন
+// ------------------------------
+
+function showMessage(id, msg, type = "success") {
+  const el = $(id);
+  if (!el) return;
+
+  el.textContent = msg;
+  el.className = "message " + type;
 }
-async function initialize(){
-  const {data, error} = await supabaseClient.auth.getSession();
 
-  if(error){
-    console.error(error);
+function taka(n) {
+  return "৳ " + Number(n || 0).toLocaleString("bn-BD");
+}
+
+function escapeHTML(value) {
+  return String(value ?? "").replace(/[&<>"']/g, char => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#039;"
+  })[char]);
+}
+
+function validMemberId(value) {
+  return /^MSH(?!000)\d{3,}$/i.test(value);
+}
+
+function photoExt(file) {
+  if (file.type === "image/png") return "png";
+  if (file.type === "image/webp") return "webp";
+  return "jpg";
+}
+
+async function signedPhoto(path) {
+  if (!path) return "";
+
+  const { data, error } = await supabaseClient.storage
+    .from("member-photos")
+    .createSignedUrl(path, 3600);
+
+  if (error) {
+    console.error("Photo error:", error);
+    return "";
+  }
+
+  return data?.signedUrl || "";
+}
+
+// ------------------------------
+// লগইন
+// ------------------------------
+
+async function signIn() {
+  const loginId = $("loginId").value.trim();
+  const password = $("password").value;
+
+  if (!loginId || !password) {
+    showMessage("loginMsg", "আইডি ও পাসওয়ার্ড দিন", "error");
     return;
   }
 
-  const session = data.session;
+  const btn = $("loginBtn");
+  btn.disabled = true;
 
-  if(passwordRecoveryMode || window.location.hash.includes("type=recovery")){
-    $("login").classList.add("hidden");
-    $("resetPasswordPage").classList.remove("hidden");
-    return;
-  }
+  const email = validMemberId(loginId)
+    ? loginId.toLowerCase() + "@members.matarbari.local"
+    : loginId;
 
-  if(session){
-    currentUser = session.user;
+  try {
+    const { data, error } =
+      await supabaseClient.auth.signInWithPassword({
+        email,
+        password
+      });
+
+    if (error) throw error;
+
+    currentUser = data.user;
     await loadDashboard();
+
+  } catch (error) {
+    showMessage(
+      "loginMsg",
+      "লগইন ব্যর্থ: " + error.message,
+      "error"
+    );
+  } finally {
+    btn.disabled = false;
   }
 }
-async function loadDashboard(){
-  if(!currentUser)return;
 
-  const {data:profile,error}=await supabaseClient
-    .from("profiles")
-    .select("*")
-    .eq("id",currentUser.id)
-    .single();
+// ------------------------------
+// লগআউট
+// ------------------------------
 
-  if(error||!profile){
-    alert("অ্যাকাউন্ট প্রোফাইল পাওয়া যায়নি: "+(error?.message||""));
+async function logout() {
+  const { error } = await supabaseClient.auth.signOut();
+
+  if (error) {
+    alert("লগআউট করা যায়নি: " + error.message);
     return;
   }
 
-  currentProfile=profile;
-  currentRole=profile.role;
+  currentUser = null;
+  currentRole = null;
+  currentProfile = null;
 
-  $("login").classList.add("hidden");
-  $("dashboard").classList.remove("hidden");
-  $("bottomNav").classList.remove("hidden");
+  if (homepageClockInterval) {
+    clearInterval(homepageClockInterval);
+    homepageClockInterval = null;
+  }
 
-  $("welcome").textContent="স্বাগতম, "+(profile.full_name||currentUser.email);
+  $("dashboard").classList.add("hidden");
+  $("bottomNav").classList.add("hidden");
+  $("login").classList.remove("hidden");
+  $("resetPasswordPage").classList.add("hidden");
 
-  const isAdmin=currentRole==="admin";
-  $("adminMenuItem").classList.toggle("hidden", !isAdmin);
-
-  // Both admin and members can see the service menu
-  $("memberMenu").classList.remove("hidden");
-
-// Admin panel remains admin-only
-$("admin").classList.add("hidden");
+  $("loginId").value = "";
+  $("password").value = "";
+  $("loginMsg").textContent = "";
 
   showHomePage();
-
-  // Start live clock and calendar
-  startHomepageClock();
-
-  // Show personal profile and summary
-  showNoticeForm();
-  await loadNoticeTicker();
-  await loadNotices();
-
-  if(isAdmin){
-    await loadAdminMembers();
-    await loadAdminProfiles();
-    await loadMemberProfile();
-    await loadTransactions();
-  }else{
-    await loadMemberProfile();
-    await loadTransactions();
-  }
-
-  lucide.createIcons();
 }
 
+// ------------------------------
+// অ্যাপ চালু
+// ------------------------------
 
-async function loadMemberProfile(){
-  const {data,error}=await supabaseClient
-    .from("member_profiles")
-    .select("*")
-    .eq("user_id",currentUser.id)
-    .maybeSingle();
+async function initialize() {
+  try {
+    const { data, error } =
+      await supabaseClient.auth.getSession();
 
-  if(error){
-    showMessage("profileMessage",error.message,"error");
+    if (error) throw error;
+
+    if (
+      passwordRecoveryMode ||
+      window.location.hash.includes("type=recovery")
+    ) {
+      $("login").classList.add("hidden");
+      $("resetPasswordPage").classList.remove("hidden");
+      return;
+    }
+
+    if (data.session) {
+      currentUser = data.session.user;
+      await loadDashboard();
+    }
+
+  } catch (error) {
+    console.error("Initialization error:", error);
+  }
+}
+
+// ------------------------------
+// Dashboard
+// ------------------------------
+
+async function loadDashboard() {
+  if (!currentUser) return;
+
+  try {
+    const { data: profile, error } = await supabaseClient
+      .from("profiles")
+      .select("*")
+      .eq("id", currentUser.id)
+      .single();
+
+    if (error || !profile) {
+      alert(
+        "অ্যাকাউন্ট প্রোফাইল পাওয়া যায়নি: " +
+        (error?.message || "")
+      );
+      return;
+    }
+
+    currentProfile = profile;
+    currentRole = profile.role;
+
+    $("login").classList.add("hidden");
+    $("resetPasswordPage").classList.add("hidden");
+    $("dashboard").classList.remove("hidden");
+    $("bottomNav").classList.remove("hidden");
+
+    $("welcome").textContent =
+      "স্বাগতম, " + (profile.full_name || currentUser.email);
+
+    const isAdmin = currentRole === "admin";
+
+    $("adminMenuItem").classList.toggle("hidden", !isAdmin);
+    $("admin").classList.add("hidden");
+    $("memberMenu").classList.remove("hidden");
+
+    showHomePage();
+    startHomepageClock();
+    showNoticeForm();
+
+    await loadNoticeTicker();
+    await loadNotices();
+
+    if (isAdmin) {
+      await loadAdminMembers();
+      await loadAdminProfiles();
+    } else {
+      await loadMemberProfile();
+    }
+
+    await loadTransactions();
+
+    if (window.lucide) {
+      window.lucide.createIcons();
+    }
+
+  } catch (error) {
+    console.error("Dashboard error:", error);
+    alert("ড্যাশবোর্ড লোড করা যায়নি: " + error.message);
+  }
+}
+
+// ------------------------------
+// হোম পেজ ও মেনু
+// ------------------------------
+
+function showHomePage() {
+  const homeItems = [
+    "timeCalendarPrayerCard",
+    "memberMenu"
+  ];
+
+  const hiddenItems = [
+    "memberProfileArea",
+    "accountCard",
+    "balanceCard",
+    "recordsCard",
+    "noticeCard",
+    "helpCard",
+    "admin"
+  ];
+
+  homeItems.forEach(id => {
+    if ($(id)) $(id).classList.remove("hidden");
+  });
+
+  hiddenItems.forEach(id => {
+    if ($(id)) $(id).classList.add("hidden");
+  });
+
+  if ($("adminEditCard")) {
+    $("adminEditCard").classList.add("hidden");
+  }
+
+  document.querySelectorAll("[data-nav]").forEach(btn => {
+    btn.classList.toggle(
+      "active",
+      btn.dataset.nav === "home"
+    );
+  });
+}
+
+function openServicePage(id) {
+  if (id === "admin" && currentRole !== "admin") {
     return;
   }
 
-  if(!data){
+  const pages = [
+    "timeCalendarPrayerCard",
+    "memberMenu",
+    "memberProfileArea",
+    "accountCard",
+    "balanceCard",
+    "recordsCard",
+    "noticeCard",
+    "helpCard",
+    "admin"
+  ];
+
+  pages.forEach(page => {
+    if ($(page)) $(page).classList.add("hidden");
+  });
+
+  if ($(id)) {
+    $(id).classList.remove("hidden");
+    $(id).scrollIntoView({
+      behavior: "smooth",
+      block: "start"
+    });
+  }
+
+  document.querySelectorAll("[data-nav]").forEach(btn => {
+    btn.classList.toggle(
+      "active",
+      btn.dataset.nav === "menu"
+    );
+  });
+}
+
+// ------------------------------
+// বাংলা, ইংরেজি ও হিজরি তারিখ
+// ------------------------------
+
+function updateHomepageClock() {
+  const now = new Date();
+
+  $("liveClock").textContent =
+    new Intl.DateTimeFormat("en-US", {
+      timeZone: "Asia/Dhaka",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: true
+    }).format(now);
+
+  $("englishDate").textContent =
+    "ইংরেজি: " +
+    new Intl.DateTimeFormat("en-GB", {
+      timeZone: "Asia/Dhaka",
+      day: "numeric",
+      month: "long",
+      year: "numeric"
+    }).format(now);
+
+  try {
+    $("banglaDate").textContent =
+      "বাংলা: " +
+      new Intl.DateTimeFormat("bn-BD-u-ca-beng", {
+        timeZone: "Asia/Dhaka",
+        day: "numeric",
+        month: "long",
+        year: "numeric"
+      }).format(now);
+  } catch (error) {
+    $("banglaDate").textContent =
+      "বাংলা তারিখ পাওয়া যায়নি";
+  }
+
+  try {
+    $("hijriDate").textContent =
+      "হিজরি: " +
+      new Intl.DateTimeFormat("bn-BD-u-ca-islamic", {
+        timeZone: "Asia/Dhaka",
+        day: "numeric",
+        month: "long",
+        year: "numeric"
+      }).format(now);
+  } catch (error) {
+    $("hijriDate").textContent =
+      "হিজরি তারিখ পাওয়া যায়নি";
+  }
+}
+
+function startHomepageClock() {
+  if (homepageClockInterval) {
+    clearInterval(homepageClockInterval);
+  }
+
+  updateHomepageClock();
+
+  homepageClockInterval = setInterval(
+    updateHomepageClock,
+    1000
+  );
+}
+
+// ------------------------------
+// সদস্য প্রোফাইল
+// ------------------------------
+
+async function loadMemberProfile() {
+  const { data, error } = await supabaseClient
+    .from("member_profiles")
+    .select("*")
+    .eq("user_id", currentUser.id)
+    .maybeSingle();
+
+  if (error) {
+    console.error("Profile error:", error);
+    showMessage("profileMessage", error.message, "error");
+    return;
+  }
+
+  if (!data) {
     $("memberProfileView").classList.add("hidden");
     $("memberProfileForm").classList.remove("hidden");
-    $("profileFullName").value=currentProfile.full_name||"";
+    $("profileFullName").value =
+      currentProfile.full_name || "";
     return;
   }
 
   $("memberProfileForm").classList.add("hidden");
   $("memberProfileView").classList.remove("hidden");
 
-  const photo=await signedPhoto(data.photo_path);
+  const photo = await signedPhoto(data.photo_path);
+  const avatar = $("profileHeaderPhoto");
 
-  // Profile photo
-  const avatar=$("profileHeaderPhoto");
-  avatar.innerHTML="👤";
+  avatar.innerHTML = "👤";
 
-  if(photo){
-    const img=document.createElement("img");
-    img.src=photo;
-    img.alt="প্রোফাইল ছবি";
+  if (photo) {
+    const img = document.createElement("img");
+    img.src = photo;
+    img.alt = "প্রোফাইল ছবি";
     avatar.replaceChildren(img);
   }
 
-  // Member name
-  $("profileHeaderName").textContent=data.full_name||"";
+  $("profileHeaderName").textContent =
+    data.full_name || "";
 
-  // Member ID
-  const dir=await supabaseClient
+  const { data: dir } = await supabaseClient
     .from("member_directory")
     .select("member_code")
-    .eq("auth_user_id",currentUser.id)
+    .eq("auth_user_id", currentUser.id)
     .maybeSingle();
 
-  const memberCode=dir.data?.member_code||"সদস্য";
+  const memberCode = dir?.member_code || "সদস্য";
 
-  $("profileHeaderCode").textContent=memberCode;
+  $("profileHeaderCode").textContent = memberCode;
 
-  // Academic Information
-  $("viewEducation").textContent=data.education||"তথ্য নেই";
-  $("viewOccupation").textContent=data.occupation||"তথ্য নেই";
+  $("viewEducation").textContent =
+    data.education || "তথ্য নেই";
 
-  // Personal Information
-  $("viewFullName").textContent=data.full_name||"তথ্য নেই";
-  $("viewDob").textContent=data.date_of_birth||"তথ্য নেই";
-  $("viewBloodGroup").textContent=data.blood_group||"তথ্য নেই";
-  $("viewPhone").textContent=data.phone||"তথ্য নেই";
-  $("viewAddress").textContent=data.address||"তথ্য নেই";
-  $("viewAbout").textContent=data.about||"তথ্য নেই";
+  $("viewOccupation").textContent =
+    data.occupation || "তথ্য নেই";
 
-  // Guardian Information
-  $("viewFatherName").textContent=data.father_name||"তথ্য নেই";
-  $("viewMotherName").textContent=data.mother_name||"তথ্য নেই";
+  $("viewFullName").textContent =
+    data.full_name || "তথ্য নেই";
 
-  // Existing dashboard summary
-  $("summaryName").textContent=data.full_name||"";
-  $("summaryPhone").textContent=data.phone||"";
-  $("summaryCode").textContent=memberCode;
+  $("viewDob").textContent =
+    data.date_of_birth || "তথ্য নেই";
 
-  if(photo){
-    $("summaryPhoto").src=photo;
+  $("viewBloodGroup").textContent =
+    data.blood_group || "তথ্য নেই";
+
+  $("viewPhone").textContent =
+    data.phone || "তথ্য নেই";
+
+  $("viewAddress").textContent =
+    data.address || "তথ্য নেই";
+
+  $("viewAbout").textContent =
+    data.about || "তথ্য নেই";
+
+  $("viewFatherName").textContent =
+    data.father_name || "তথ্য নেই";
+
+  $("viewMotherName").textContent =
+    data.mother_name || "তথ্য নেই";
+
+  $("summaryName").textContent =
+    data.full_name || "";
+
+  $("summaryPhone").textContent =
+    data.phone || "";
+
+  $("summaryCode").textContent = memberCode;
+
+  if (photo) {
+    $("summaryPhoto").src = photo;
     $("summaryPhoto").classList.remove("hidden");
-  }else{
+  } else {
     $("summaryPhoto").classList.add("hidden");
   }
+
+  $("memberSummary").classList.remove("hidden");
 }
 
+// ------------------------------
+// প্রোফাইল সংরক্ষণ
+// ------------------------------
 
-async function loadNoticeTicker(){
-  const ticker = document.getElementById("tickerText");
-  if(!ticker) return;
+async function saveMemberProfile() {
+  const fullName = $("profileFullName").value.trim();
+  const file = $("profilePhoto").files[0];
 
-  const {data,error} = await supabaseClient
-    .from("notices")
-    .select("title")
-    .order("created_at",{ascending:false});
-
-  if(error){
-    ticker.textContent = "নোটিশ লোড করা যায়নি";
+  if (!fullName) {
+    showMessage(
+      "profileMessage",
+      "সম্পূর্ণ নাম লিখুন",
+      "error"
+    );
     return;
   }
 
-  if(!data || data.length === 0){
+  const btn = $("saveMemberProfile");
+  btn.disabled = true;
+
+  try {
+    let photoPath = null;
+
+    if (file) {
+      if (
+        !["image/jpeg", "image/png", "image/webp"].includes(file.type) ||
+        file.size > 2 * 1024 * 1024
+      ) {
+        throw new Error(
+          "JPG, PNG অথবা WEBP ছবি দিন (সর্বোচ্চ ২ MB)"
+        );
+      }
+
+      photoPath =
+        `${currentUser.id}/profile.${photoExt(file)}`;
+
+      const { error } = await supabaseClient.storage
+        .from("member-photos")
+        .upload(photoPath, file, {
+          upsert: true
+        });
+
+      if (error) throw error;
+    }
+
+    const row = {
+      user_id: currentUser.id,
+      full_name: fullName,
+      father_name: $("fatherName").value.trim(),
+      mother_name: $("motherName").value.trim(),
+      date_of_birth: $("dateOfBirth").value || null,
+      blood_group: $("bloodGroup").value,
+      phone: $("profilePhone").value.trim(),
+      address: $("profileAddress").value.trim(),
+      education: $("profileEducation").value.trim(),
+      occupation: $("profileOccupation").value.trim(),
+      about: $("profileAbout").value.trim(),
+      photo_path: photoPath
+    };
+
+    const { error } = await supabaseClient
+      .from("member_profiles")
+      .insert(row);
+
+    if (error) throw error;
+
+    showMessage(
+      "profileMessage",
+      "প্রোফাইল সফলভাবে সংরক্ষণ হয়েছে"
+    );
+
+    await loadMemberProfile();
+
+  } catch (error) {
+    showMessage(
+      "profileMessage",
+      "সংরক্ষণ ব্যর্থ: " + error.message,
+      "error"
+    );
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+// ------------------------------
+// নোটিশ
+// ------------------------------
+
+async function loadNoticeTicker() {
+  const ticker = $("tickerText");
+  if (!ticker) return;
+
+  const { data, error } = await supabaseClient
+    .from("notices")
+    .select("title")
+    .order("created_at", {
+      ascending: false
+    });
+
+  if (error) {
+    ticker.textContent = "নোটিশ লোড করা যায়নি";
+    return;
+  }
+
+  if (!data?.length) {
     ticker.textContent = "বর্তমানে কোনো নোটিশ নেই";
     return;
   }
 
-  ticker.textContent = data.map(n => n.title).join("  ✦  ");
+  ticker.textContent = data
+    .map(item => item.title)
+    .join("  ✦  ");
 }
-async function loadNotices(){
-  const area = $("noticeList");
-  if(!area) return;
 
+async function loadNotices() {
+  const area = $("noticeList");
   area.textContent = "নোটিশ লোড হচ্ছে...";
 
-  const {data,error} = await supabaseClient
+  const { data, error } = await supabaseClient
     .from("notices")
     .select("*")
-    .order("created_at",{ascending:false});
+    .order("created_at", {
+      ascending: false
+    });
 
-  if(error){
-    area.textContent = "নোটিশ লোড করা যায়নি: " + error.message;
+  if (error) {
+    area.textContent =
+      "নোটিশ লোড করা যায়নি: " + error.message;
     return;
   }
 
-  if(!data || data.length === 0){
+  if (!data?.length) {
     area.textContent = "বর্তমানে কোনো নোটিশ নেই";
     return;
   }
@@ -985,27 +1383,29 @@ async function loadNotices(){
     item.className = "notice-item";
 
     const title = document.createElement("h4");
-    title.textContent = notice.title;
+    title.textContent = notice.title || "";
 
     const content = document.createElement("p");
-    content.textContent = notice.content;
+    content.textContent = notice.content || "";
 
-    item.appendChild(title);
-    item.appendChild(content);
+    item.append(title, content);
     area.appendChild(item);
   });
 }
-  
-  function showNoticeForm(){
-  const form = document.getElementById("adminNoticeForm");
 
-  if(form){
-    form.classList.toggle("hidden", currentRole !== "admin");
+function showNoticeForm() {
+  const form = $("adminNoticeForm");
+
+  if (form) {
+    form.classList.toggle(
+      "hidden",
+      currentRole !== "admin"
+    );
   }
-  }
-  
-  async function addNotice(){
-  if(currentRole !== "admin"){
+}
+
+async function addNotice() {
+  if (currentRole !== "admin") {
     alert("শুধু অ্যাডমিন নোটিশ প্রকাশ করতে পারবেন");
     return;
   }
@@ -1013,16 +1413,23 @@ async function loadNotices(){
   const title = $("noticeTitle").value.trim();
   const content = $("noticeContent").value.trim();
 
-  if(!title || !content){
-    $("noticeMsg").textContent = "শিরোনাম ও বিবরণ লিখুন";
+  if (!title || !content) {
+    showMessage(
+      "noticeMsg",
+      "শিরোনাম ও বিবরণ লিখুন",
+      "error"
+    );
     return;
   }
 
-  const btn = document.querySelector("#adminNoticeForm button");
+  const btn = document.querySelector(
+    "#adminNoticeForm button"
+  );
+
   btn.disabled = true;
 
-  try{
-    const {error} = await supabaseClient
+  try {
+    const { error } = await supabaseClient
       .from("notices")
       .insert({
         title,
@@ -1030,173 +1437,201 @@ async function loadNotices(){
         created_by: currentUser.id
       });
 
-    if(error) throw error;
+    if (error) throw error;
 
     $("noticeTitle").value = "";
     $("noticeContent").value = "";
-    $("noticeMsg").textContent = "নোটিশ সফলভাবে প্রকাশ হয়েছে";
+
+    showMessage(
+      "noticeMsg",
+      "নোটিশ সফলভাবে প্রকাশ হয়েছে"
+    );
 
     await loadNoticeTicker();
     await loadNotices();
 
-  }catch(error){
-    $("noticeMsg").textContent = "প্রকাশ ব্যর্থ: " + error.message;
-  }finally{
+  } catch (error) {
+    showMessage(
+      "noticeMsg",
+      "প্রকাশ ব্যর্থ: " + error.message,
+      "error"
+    );
+  } finally {
     btn.disabled = false;
   }
-  }
-                                                                
-async function saveMemberProfile(){
- const fullName=$("profileFullName").value.trim();if(!fullName){showMessage("profileMessage","নাম লিখুন","error");return}
- $("saveMemberProfile").disabled=true;let photoPath=null;const file=$("profilePhoto").files[0];
- try{
- if(file){if(!["image/jpeg","image/png","image/webp"].includes(file.type)||file.size>2*1024*1024)throw Error("JPG, PNG অথবা WEBP ছবি দিন (সর্বোচ্চ ২ MB)");photoPath=`${currentUser.id}/profile.${photoExt(file)}`;const {error}=await supabaseClient.storage.from("member-photos").upload(photoPath,file,{upsert:false});if(error)throw error}
- const row={user_id:currentUser.id,full_name:fullName,father_name:$("fatherName").value.trim(),mother_name:$("motherName").value.trim(),date_of_birth:$("dateOfBirth").value||null,blood_group:$("bloodGroup").value,phone:$("profilePhone").value.trim(),address:$("profileAddress").value.trim(),education:$("profileEducation").value.trim(),occupation:$("profileOccupation").value.trim(),about:$("profileAbout").value.trim(),photo_path:photoPath};
- const {error}=await supabaseClient.from("member_profiles").insert(row);if(error)throw error;showMessage("profileMessage","প্রোফাইল তৈরি হয়েছে");await loadMemberProfile()
- }catch(e){showMessage("profileMessage","সংরক্ষণ ব্যর্থ: "+e.message,"error")}finally{$("saveMemberProfile").disabled=false}
 }
 
+// ------------------------------
+// লেনদেন
+// ------------------------------
 
-
-async function loadTransactions(){
+async function loadTransactions() {
+  const records = $("records");
   let membersMap = {};
 
-  if(currentRole === "admin"){
-    const {data: members, error: memberError} = await supabaseClient
+  if (currentRole === "admin") {
+    const { data: members, error } = await supabaseClient
       .from("member_directory")
       .select("auth_user_id, member_code, full_name");
 
-    if(memberError){
-      $("records").innerHTML =
-        "<tr><td colspan='6'>সদস্যের তথ্য পাওয়া যায়নি: "+
-        escapeHTML(memberError.message)+"</td></tr>";
+    if (error) {
+      records.innerHTML =
+        "<tr><td colspan='6'>সদস্যের তথ্য পাওয়া যায়নি: " +
+        escapeHTML(error.message) +
+        "</td></tr>";
       return;
     }
 
-    (members || []).forEach(m => {
-      membersMap[m.auth_user_id] =
-        m.member_code + " - " + m.full_name;
+    (members || []).forEach(member => {
+      membersMap[member.auth_user_id] =
+        member.member_code + " - " + member.full_name;
     });
   }
 
-  let q = supabaseClient
+  let query = supabaseClient
     .from("transactions")
     .select("*")
-    .order("entry_date", {ascending:false});
+    .order("entry_date", {
+      ascending: false
+    });
 
-  if(currentRole !== "admin"){
-    q = q.eq("member_id", currentUser.id);
+  if (currentRole !== "admin") {
+    query = query.eq("member_id", currentUser.id);
   }
 
-  const {data,error} = await q;
+  const { data, error } = await query;
 
-  if(error){
-    $("records").innerHTML =
-      "<tr><td colspan='6'>তথ্য লোড হয়নি: "+
-      escapeHTML(error.message)+"</td></tr>";
+  if (error) {
+    records.innerHTML =
+      "<tr><td colspan='6'>তথ্য লোড হয়নি: " +
+      escapeHTML(error.message) +
+      "</td></tr>";
     return;
   }
 
   let deposit = 0;
   let withdraw = 0;
 
-  $("records").innerHTML = "";
+  records.innerHTML = "";
 
   $("memberHead").classList.toggle(
-    "hidden", currentRole !== "admin"
+    "hidden",
+    currentRole !== "admin"
   );
 
   $("adminActionHead").classList.toggle(
-    "hidden", currentRole !== "admin"
+    "hidden",
+    currentRole !== "admin"
   );
 
   (data || []).forEach(item => {
     const amount = Number(item.amount || 0);
-    const type = String(item.kind || "").trim().toLowerCase();
+    const type = String(item.kind || "")
+      .trim()
+      .toLowerCase();
 
-    if(type === "deposit") deposit += amount;
-    if(type === "withdrawal") withdraw += amount;
+    if (type === "deposit") deposit += amount;
+    if (type === "withdrawal") withdraw += amount;
 
     const date = item.entry_date
-      ? new Date(item.entry_date+"T00:00:00").toLocaleDateString("bn-BD")
+      ? new Date(
+          item.entry_date + "T00:00:00"
+        ).toLocaleDateString("bn-BD")
       : "";
 
     const displayType = {
-      deposit:"জমা",
-      withdrawal:"উত্তোলন",
-      fee:"ফি",
-      expense:"খরচ",
-      fine:"জরিমানা"
+      deposit: "জমা",
+      withdrawal: "উত্তোলন",
+      fee: "ফি",
+      expense: "খরচ",
+      fine: "জরিমানা"
     }[type] || "অনির্ধারিত";
 
     const tr = document.createElement("tr");
 
-    if(currentRole === "admin"){
+    if (currentRole === "admin") {
       const memberCell = document.createElement("td");
       memberCell.textContent =
         membersMap[item.member_id] || "সদস্য পাওয়া যায়নি";
       tr.appendChild(memberCell);
     }
 
-    [date, displayType, taka(amount), item.description || ""]
-      .forEach(value => {
-        const td = document.createElement("td");
-        td.textContent = value;
-        tr.appendChild(td);
-      });
+    [
+      date,
+      displayType,
+      taka(amount),
+      item.description || ""
+    ].forEach(value => {
+      const td = document.createElement("td");
+      td.textContent = value;
+      tr.appendChild(td);
+    });
 
-    if(currentRole === "admin"){
+    if (currentRole === "admin") {
       const td = document.createElement("td");
 
       const editBtn = document.createElement("button");
       editBtn.textContent = "সম্পাদনা";
       editBtn.onclick = () =>
-        editTransaction(item.id, amount, item.description || "");
+        editTransaction(
+          item.id,
+          amount,
+          item.description || ""
+        );
 
       const deleteBtn = document.createElement("button");
       deleteBtn.textContent = "মুছে ফেলুন";
-      deleteBtn.onclick = () => deleteTransaction(item.id);
+      deleteBtn.className = "danger";
+      deleteBtn.onclick = () =>
+        deleteTransaction(item.id);
 
       td.append(editBtn, deleteBtn);
       tr.appendChild(td);
     }
 
-    $("records").appendChild(tr);
+    records.appendChild(tr);
   });
 
-  if($("totalDeposit")) $("totalDeposit").textContent = taka(deposit);
-  if($("totalWithdraw")) $("totalWithdraw").textContent = taka(withdraw);
-  if($("balance")) $("balance").textContent = taka(deposit-withdraw);
-  if($("balanceOnly")) $("balanceOnly").textContent = taka(deposit-withdraw);
+  $("totalDeposit").textContent = taka(deposit);
+  $("totalWithdraw").textContent = taka(withdraw);
+  $("balance").textContent = taka(deposit - withdraw);
+  $("balanceOnly").textContent = taka(deposit - withdraw);
 }
 
+async function editTransaction(id, oldAmount, oldDescription) {
+  if (currentRole !== "admin") return;
 
-async function editTransaction(id, oldAmount, oldDescription){
-  if(currentRole !== "admin") return;
+  const amountText = prompt(
+    "নতুন টাকার পরিমাণ লিখুন:",
+    oldAmount
+  );
 
-  const amountText = prompt("নতুন টাকার পরিমাণ লিখুন:", oldAmount);
-  if(amountText === null) return;
+  if (amountText === null) return;
 
   const amount = Number(amountText);
 
-  if(!Number.isFinite(amount) || amount <= 0){
+  if (!Number.isFinite(amount) || amount <= 0) {
     alert("সঠিক টাকার পরিমাণ দিন");
     return;
   }
 
-  const description = prompt("নতুন বিবরণ লিখুন:", oldDescription);
-  if(description === null) return;
+  const description = prompt(
+    "নতুন বিবরণ লিখুন:",
+    oldDescription
+  );
 
-  const {error} = await supabaseClient
+  if (description === null) return;
+
+  const { error } = await supabaseClient
     .from("transactions")
     .update({
-      amount: amount,
-      description: description
+      amount,
+      description
     })
     .eq("id", id);
 
-  if(error){
-    alert("পরিবর্তন হয়নি: "+error.message);
+  if (error) {
+    alert("পরিবর্তন হয়নি: " + error.message);
     return;
   }
 
@@ -1204,20 +1639,20 @@ async function editTransaction(id, oldAmount, oldDescription){
   await loadTransactions();
 }
 
-async function deleteTransaction(id){
-  if(currentRole !== "admin") return;
+async function deleteTransaction(id) {
+  if (currentRole !== "admin") return;
 
-  if(!confirm("আপনি কি এই লেনদেনটি মুছে ফেলতে চান?")){
+  if (!confirm("আপনি কি এই লেনদেনটি মুছে ফেলতে চান?")) {
     return;
   }
 
-  const {error} = await supabaseClient
+  const { error } = await supabaseClient
     .from("transactions")
     .delete()
     .eq("id", id);
 
-  if(error){
-    alert("মুছে ফেলা যায়নি: "+error.message);
+  if (error) {
+    alert("মুছে ফেলা যায়নি: " + error.message);
     return;
   }
 
@@ -1225,144 +1660,472 @@ async function deleteTransaction(id){
   await loadTransactions();
 }
 
+// ------------------------------
+// অ্যাডমিন: সদস্য তালিকা
+// ------------------------------
 
+async function loadAdminMembers() {
+  const { data, error } = await supabaseClient
+    .from("member_directory")
+    .select("*")
+    .order("member_code");
 
-async function loadAdminMembers(){
- const {data,error}=await supabaseClient.from("member_directory").select("*").order("member_code");
- if(error){showMessage("adminMsg","সদস্য তালিকা লোড হয়নি: "+error.message,"error");return}
- $("memberId").innerHTML='<option value="">সদস্য নির্বাচন করুন</option>';$("resetMemberId").innerHTML='<option value="">সদস্য নির্বাচন করুন</option>';
- (data||[]).forEach(m=>{let a=document.createElement("option");a.value=m.auth_user_id;a.textContent=m.member_code+" - "+m.full_name;$("memberId").appendChild(a);$("resetMemberId").appendChild(a.cloneNode(true))})
-}
-async function createMemberAccount(){
- const name=$("newMemberName").value.trim(),phone=$("newMemberPhone").value.trim(),email=$("newMemberEmail").value.trim(),memberCode=$("newMemberCode").value.trim().toUpperCase(),password=$("newMemberPassword").value;
- if(!name||!validMemberId(memberCode)||password.length<6){showMessage("createMsg","নাম, সঠিক সদস্য আইডি এবং কমপক্ষে ৬ অক্ষরের পাসওয়ার্ড দিন","error");return}
- try{const {data:s}=await supabaseClient.auth.getSession();if(!s.session?.access_token)throw Error("অ্যাডমিন লগইন পাওয়া যায়নি");
- const {data,error}=await supabaseClient.functions.invoke("create-member-account",{body:{name,phone,email,memberCode,password}});if(error)throw error;
- showMessage("createMsg",data?.message||"সদস্য অ্যাকাউন্ট তৈরি হয়েছে");["newMemberName","newMemberPhone","newMemberEmail","newMemberCode","newMemberPassword"].forEach(id=>$(id).value="");await loadAdminMembers()
- }catch(e){showMessage("createMsg",e.message,"error")}
-}
-
-
-async function resetMemberPassword(){
-  const userId = $("resetMemberId").value;
-  const password = $("resetPassword").value;
-
-  if(!userId || password.length < 6){
-    showMessage("resetMsg","সদস্য নির্বাচন করুন এবং কমপক্ষে ৬ অক্ষরের পাসওয়ার্ড দিন","error");
+  if (error) {
+    showMessage(
+      "adminMsg",
+      "সদস্য তালিকা লোড হয়নি: " + error.message,
+      "error"
+    );
     return;
   }
 
-  const selectedText =
-    $("resetMemberId").selectedOptions[0]?.textContent || "";
+  $("memberId").innerHTML =
+    '<option value="">সদস্য নির্বাচন করুন</option>';
 
-  const memberCode = selectedText.split(" - ")[0].trim().toUpperCase();
+  $("resetMemberId").innerHTML =
+    '<option value="">সদস্য নির্বাচন করুন</option>';
 
-  if(!/^MSH\d{3}$/.test(memberCode)){
-    showMessage("resetMsg","সঠিক সদস্য আইডি পাওয়া যায়নি","error");
+  (data || []).forEach(member => {
+    const option = document.createElement("option");
+
+    option.value = member.auth_user_id;
+    option.textContent =
+      member.member_code + " - " + member.full_name;    $("memberId").appendChild(option);    $("resetMemberId").appendChild(      option.cloneNode(true)    );  });}// ------------------------------// নতুন সদস্য অ্যাকাউন্ট// ------------------------------async function createMemberAccount() {  const name = $("newMemberName").value.trim();  const phone = $("newMemberPhone").value.trim();  const email = $("newMemberEmail").value.trim();  const memberCode = $("newMemberCode")    .value.trim()    .toUpperCase();  const password = $("newMemberPassword").value;  if (    !name ||    !validMemberId(memberCode) ||    password.length < 6  ) {    showMessage(      "createMsg",      "নাম, সঠিক সদস্য আইডি এবং কমপক্ষে ৬ অক্ষরের পাসওয়ার্ড দিন",      "error"    );    return;  }  const btn = $("createAccountBtn");  btn.disabled = true;try {    const { data: sessionData } =      await supabaseClient.auth.getSession();    if (!sessionData.session?.access_token) {      throw new Error("অ্যাডমিন লগইন পাওয়া যায়নি");    }    const { data, error } =      await supabaseClient.functions.invoke(        "create-member-account",        {          body: {            name,            phone,            email,            memberCode,            password          }        }      );    if (error) throw error;    showMessage(      "createMsg",      data?.message || "সদস্য অ্যাকাউন্ট তৈরি হয়েছে"    );    [      "newMemberName",      "newMemberPhone",      "newMemberEmail",      "newMemberCode",      "newMemberPassword"    ].forEach(id => {      $(id).value = "";    });await loadAdminMembers();  } catch (error) {    showMessage(      "createMsg",      error.message,      "error"    );  } finally {    btn.disabled = false;  }}// ------------------------------// সদস্যের পাসওয়ার্ড রিসেট// ------------------------------async function resetMemberPassword() {  if (currentRole !== "admin") return;  const userId = $("resetMemberId").value;  const password = $("resetPassword").value;  if (!userId || password.length < 6) {    showMessage(      "resetMsg",      "সদস্য নির্বাচন করুন এবং কমপক্ষে ৬ অক্ষরের পাসওয়ার্ড দিন",      "error"    );    return;  }  const selectedText =    $("resetMemberId").selectedOptions[0]?.textContent || "";  const memberCode = selectedText    .split(" - ")[0]    .trim()    .toUpperCase();  if (!validMemberId(memberCode)) {  "resetMsg",      "সঠিক সদস্য আইডি পাওয়া যায়নি",      "error"    );    return;  }  const btn = $("resetPasswordBtn");  btn.disabled = true;  try {    const { data, error } =      await supabaseClient.functions.invoke(        "admin-reset-member-password",        {          body: {            member_code: memberCode,            password          }        }      );    if (error) throw error;    showMessage(      "resetMsg",      data?.message || "পাসওয়ার্ড পরিবর্তন হয়েছে"    );    $("resetPassword").value = "";  } catch (error) {    showMessage(      "resetMsg",      "সমস্যা: " + error.message,      "error"    );  } finally {    btn.disabled = false;  }}
+
+// ------------------------------
+// জমা ও উত্তোলন
+// ------------------------------
+
+async function addTransaction() {
+  if (currentRole !== "admin") return;
+
+  const memberId = $("memberId").value;
+  const amount = Number($("amount").value);
+
+  const type = $("kind").value === "জমা"
+    ? "deposit"
+    : "withdrawal";
+
+  const description = $("note").value.trim();
+
+  if (
+    !memberId ||
+    !Number.isFinite(amount) ||
+    amount <= 0
+  ) {
+    showMessage(
+      "adminMsg",
+      "সদস্য ও সঠিক পরিমাণ দিন",
+      "error"
+    );
     return;
   }
 
-  const {data,error} = await supabaseClient.functions.invoke(
-    "admin-reset-member-password",
+  const now = new Date();
+
+  const entryDate = new Intl.DateTimeFormat(
+    "en-CA",
     {
-      body: {
-        member_code: memberCode,
-        password: password
-      }
+      timeZone: "Asia/Dhaka",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit"
     }
+  ).format(now);
+
+  const { error } = await supabaseClient
+    .from("transactions")
+    .insert({
+      member_id: memberId,
+      entry_date: entryDate,
+      kind: type,
+      amount,
+      description,
+      created_by: currentUser.id
+    });
+if (error) {
+    showMessage(
+      "adminMsg",
+      "লেনদেন সংরক্ষণ হয়নি: " + error.message,
+      "error"
+    );
+    return;
+  }
+
+  showMessage(
+    "adminMsg",
+    "লেনদেন সংরক্ষণ হয়েছে"
   );
 
-  if(error){
-    showMessage("resetMsg","সমস্যা: "+error.message,"error");
+  $("amount").value = "";
+  $("note").value = "";
+
+  await loadTransactions();
+}
+
+// ------------------------------
+// অ্যাডমিন: প্রোফাইল তালিকা
+// ------------------------------
+
+async function loadAdminProfiles() {
+  const area = $("adminProfiles");
+  area.textContent = "সদস্যদের প্রোফাইল লোড হচ্ছে...";
+
+  const { data: profiles, error } = await supabaseClient
+    .from("member_profiles")
+    .select("*")
+    .order("created_at", {
+      ascending: false
+    });
+
+  if (error) {
+    area.textContent =
+      "প্রোফাইল লোড হয়নি: " + error.message;
     return;
   }
 
-  showMessage("resetMsg",data?.message || "পাসওয়ার্ড পরিবর্তন হয়েছে");
-  $("resetPassword").value = "";
+  if (!profiles?.length) {
+    area.textContent =
+      "কোনো সদস্য প্রোফাইল পাওয়া যায়নি।";
+    return;
+  }
+
+  area.innerHTML = "";
+
+  for (const profile of profiles) {
+        const photo = await signedPhoto(profile.photo_path);
+
+    const card = document.createElement("div");
+    card.className = "member-card";
+
+    card.innerHTML = `
+      <div class="member-card-top">
+        ${
+          photo
+            ? `<img class="profile-photo" src="${photo}" alt="সদস্যের ছবি">`
+            : ""
+        }
+        <div>
+          <h4>${escapeHTML(profile.full_name)}</h4>
+          <p>${escapeHTML(profile.phone || "মোবাইল দেওয়া নেই")}</p>
+        </div>
+      </div>
+
+      <p>ঠিকানা: ${escapeHTML(profile.address)}</p>
+
+      <p>
+        শিক্ষা: ${escapeHTML(profile.education)}
+        · পেশা: ${escapeHTML(profile.occupation)}
+      </p>
+
+      <button type="button" class="edit-profile-btn">
+        ✎ প্রোফাইল সম্পাদনা
+      </button>
+    `;
+
+    card.querySelector("button").addEventListener(
+      "click",
+      () => openAdminEdit(profile, photo)
+    );
+
+    area.appendChild(card);
+  }
+  }
+       function openAdminEdit(profile, photo) {
+  $("editUserId").value = profile.user_id;
+  $("editFullName").value = profile.full_name || "";
+  $("editFatherName").value = profile.father_name || "";
+  $("editMotherName").value = profile.mother_name || "";
+  $("editDob").value = profile.date_of_birth || "";
+  $("editBlood").value = profile.blood_group || "";
+  $("editPhone").value = profile.phone || "";
+  $("editEducation").value = profile.education || "";
+  $("editOccupation").value = profile.occupation || "";
+  $("editAddress").value = profile.address || "";
+  $("editAbout").value = profile.about || "";
+  $("editJoinDate").value = profile.join_date || "";
+
+  $("editPhoto").value = "";
+
+  $("editPhotoPreview").innerHTML = photo
+    ? `<img class="profile-photo" src="${photo}" alt="বর্তমান ছবি">`
+    : "";
+
+  $("editMessage").textContent = "";
+
+  $("adminEditCard").classList.remove("hidden");
+
+  $("adminEditCard").scrollIntoView({
+    behavior: "smooth",
+    block: "start"
+  });
 }
 
-async function addTransaction(){
- const memberId = $("memberId").value;
- const amount = Number($("amount").value);
-const type = $("kind").value === "জমা"
-  ? "deposit"
-  : "withdrawal";;
- const description = $("note").value.trim();
+async function saveAdminProfileEdit() {
+  if (currentRole !== "admin") return;
 
- if(!memberId || !Number.isFinite(amount) || amount <= 0){
-   showMessage("adminMsg","সদস্য ও সঠিক পরিমাণ দিন","error");
-   return;
+  const userId = $("editUserId").value;
+  const fullName = $("editFullName").value.trim();
+  const file = $("editPhoto").files[0];
+
+  if (!userId || !fullName) {
+    showMessage(
+      "editMessage",
+      "সদস্যের নাম প্রয়োজন",
+      "error"
+    );
+    return;
  }
 
- const now = new Date();
- const entryDate = [
-   now.getFullYear(),
-   String(now.getMonth()+1).padStart(2,"0"),
-   String(now.getDate()).padStart(2,"0")
- ].join("-");
+  const btn = $("saveAdminEditBtn");
+  btn.disabled = true;
 
- const {error} = await supabaseClient
-   .from("transactions")
-   .insert({
-     member_id: memberId,
-     entry_date: entryDate,
-     kind: type,
-     amount: amount,
-     description: description,
-     created_by: currentUser.id
-   });
+  try {
+    const { data: old, error: readError } =
+      await supabaseClient
+        .from("member_profiles")
+        .select("photo_path")
+        .eq("user_id", userId)
+        .single();
 
- if(error){
-   showMessage("adminMsg","লেনদেন সংরক্ষণ হয়নি: "+error.message,"error");
-   return;
- }
+    if (readError) throw readError;
 
- showMessage("adminMsg","লেনদেন সংরক্ষণ হয়েছে");
- $("amount").value = "";
- $("note").value = "";
+    let photoPath = old.photo_path;
 
- await loadTransactions();
+    if (file) {
+      if (
+        !["image/jpeg", "image/png", "image/webp"].includes(file.type) ||
+        file.size > 2 * 1024 * 1024
+      ) {
+        throw new Error(
+          "JPG, PNG অথবা WEBP ছবি দিন (সর্বোচ্চ ২ MB)"
+        );
+      }
+
+      photoPath =
+        `${userId}/admin-${Date.now()}.${photoExt(file)}`;
+
+      const { error } = await supabaseClient.storage
+        .from("member-photos")
+        .upload(photoPath, file, {
+          upsert: false
+        });
+
+      if (error) throw error;
+    }
+
+    const update = {
+      full_name: fullName,
+      father_name: $("editFatherName").value.trim(),
+      mother_name: $("editMotherName").value.trim(),
+      date_of_birth: $("editDob").value || null,
+      blood_group: $("editBlood").value,
+      phone: $("editPhone").value.trim(),
+education: $("editEducation").value.trim(),
+      occupation: $("editOccupation").value.trim(),
+      address: $("editAddress").value.trim(),
+      about: $("editAbout").value.trim(),
+      join_date: $("editJoinDate").value || null,
+      photo_path: photoPath,
+      updated_at: new Date().toISOString()
+    };
+
+    const { error } = await supabaseClient
+      .from("member_profiles")
+      .update(update)
+      .eq("user_id", userId);
+
+    if (error) throw error;
+
+    showMessage(
+      "editMessage",
+      "সদস্যের প্রোফাইল আপডেট হয়েছে"
+    );
+
+    await loadAdminProfiles();
+
+  } catch (error) {
+    showMessage(
+      "editMessage",
+      "আপডেট হয়নি: " + error.message,
+      "error"
+    );
+  } finally {
+    btn.disabled = false;
+  }
+    }
+
+  // ------------------------------
+// পাসওয়ার্ড ভুলে গেলে
+// ------------------------------
+
+function showForgotPassword() {
+  $("forgotPasswordArea").classList.remove("hidden");
+  $("loginMsg").textContent = "";
+  $("recoveryMsg").textContent = "";
 }
 
-async function loadAdminProfiles(){
- const area=$("adminProfiles");area.textContent="সদস্যদের প্রোফাইল লোড হচ্ছে...";
- const {data:profiles,error}=await supabaseClient.from("member_profiles").select("*").order("created_at",{ascending:false});
- if(error){area.textContent="প্রোফাইল লোড হয়নি: "+error.message;return}
- if(!profiles?.length){area.textContent="কোনো সদস্য প্রোফাইল পাওয়া যায়নি।";return}
- area.innerHTML="";
- for(const p of profiles){
- const photo=await signedPhoto(p.photo_path),card=document.createElement("div");card.className="member-card";
- card.innerHTML=`<div class="member-card-top">${photo?`<img class="profile-photo" src="${photo}" alt="সদস্যের ছবি">`:""}<div><h4>${escapeHTML(p.full_name)}</h4><p>${escapeHTML(p.phone||"মোবাইল দেওয়া নেই")}</p></div></div><p>ঠিকানা: ${escapeHTML(p.address)}</p><p>শিক্ষা: ${escapeHTML(p.education)} · পেশা: ${escapeHTML(p.occupation)}</p><button type="button" class="edit-profile-btn">✎ প্রোফাইল সম্পাদনা</button>`;
- card.querySelector("button").addEventListener("click",()=>openAdminEdit(p,photo));area.appendChild(card)
- }
+function hideForgotPassword() {
+  $("forgotPasswordArea").classList.add("hidden");
+  $("recoveryMsg").textContent = "";
 }
-function openAdminEdit(p,photo){
- $("editUserId").value=p.user_id;$("editFullName").value=p.full_name||"";$("editFatherName").value=p.father_name||"";$("editMotherName").value=p.mother_name||"";$("editDob").value=p.date_of_birth||"";$("editBlood").value=p.blood_group||"";$("editPhone").value=p.phone||"";$("editEducation").value=p.education||"";$("editOccupation").value=p.occupation||"";$("editAddress").value=p.address||"";$("editAbout").value=p.about||"";$("editJoinDate").value=p.join_date||"";
- $("editPhoto").value="";$("editPhotoPreview").innerHTML=photo?`<img class="profile-photo" src="${photo}" alt="বর্তমান ছবি">`:"";
- $("editMessage").textContent="";$("adminEditCard").classList.remove("hidden");$("adminEditCard").scrollIntoView({behavior:"smooth",block:"start"})
+
+async function submitPasswordRecovery() {
+  const recoveryId = $("recoveryId").value.trim();
+
+  if (!recoveryId) {
+    showMessage(
+      "recoveryMsg",
+      "ইমেইল অথবা সদস্য আইডি লিখুন",
+      "error"
+    );
+    return;
+  }
+
+  // সদস্যদের pseudo-email-এ ইমেইল পাঠানো সম্ভব নয়।
+  if (validMemberId(recoveryId)) {
+    showMessage(
+      "recoveryMsg",
+      "সদস্যদের পাসওয়ার্ড রিসেটের জন্য অ্যাডমিনের সঙ্গে যোগাযোগ করুন।",
+      "error"
+    );
+    return;
+  }
+
+  const btn = document.querySelector(
+    "#forgotPasswordArea button"
+  );
+btn.disabled = true;
+
+  try {
+    const { error } =
+      await supabaseClient.auth.resetPasswordForEmail(
+        recoveryId,
+        {
+          redirectTo:
+            window.location.origin +
+            window.location.pathname
+        }
+      );
+
+    if (error) throw error;
+
+    showMessage(
+      "recoveryMsg",
+      "ইমেইলটি নিবন্ধিত থাকলে পাসওয়ার্ড রিসেটের লিংক পাঠানো হয়েছে।"
+    );
+
+  } catch (error) {
+    showMessage(
+      "recoveryMsg",
+      "অনুরোধ পাঠানো যায়নি: " + error.message,
+      "error"
+    );
+  } finally {
+    btn.disabled = false;
+  }
 }
-async function saveAdminProfileEdit(){
- const userId=$("editUserId").value,fullName=$("editFullName").value.trim(),file=$("editPhoto").files[0];
- if(!userId||!fullName){showMessage("editMessage","সদস্যের নাম প্রয়োজন","error");return}
- $("saveAdminEditBtn").disabled=true;showMessage("editMessage","পরিবর্তন সংরক্ষণ হচ্ছে...");
- try{
- const {data:old,error:readError}=await supabaseClient.from("member_profiles").select("photo_path").eq("user_id",userId).single();if(readError)throw readError;
- let photoPath=old.photo_path;
- if(file){if(!["image/jpeg","image/png","image/webp"].includes(file.type)||file.size>2*1024*1024)throw Error("JPG, PNG অথবা WEBP ছবি দিন (সর্বোচ্চ ২ MB)");
- photoPath=`${userId}/admin-${Date.now()}.${photoExt(file)}`;const {error}=await supabaseClient.storage.from("member-photos").upload(photoPath,file,{upsert:false});if(error)throw error}
- const update={full_name:fullName,father_name:$("editFatherName").value.trim(),mother_name:$("editMotherName").value.trim(),date_of_birth:$("editDob").value||null,blood_group:$("editBlood").value,phone:$("editPhone").value.trim(),education:$("editEducation").value.trim(),occupation:$("editOccupation").value.trim(),address:$("editAddress").value.trim(),about:$("editAbout").value.trim(),join_date:$("editJoinDate").value||null,photo_path:photoPath,updated_at:new Date().toISOString()};
- const {error}=await supabaseClient.from("member_profiles").update(update).eq("user_id",userId);if(error)throw error;
- showMessage("editMessage","সদস্যের প্রোফাইল আপডেট হয়েছে");await loadAdminProfiles()
- }catch(e){showMessage("editMessage","আপডেট হয়নি: "+e.message,"error")}finally{$("saveAdminEditBtn").disabled=false}
-}  khulna: {name:"খুলনা", lat:22.8456, lon:89.5403},
-  barishal: {name:"বরিশাল", lat:22.7010, lon:90.3535},
-  rangpur: {name:"রংপুর", lat:25.7439, lon:89.2752},
-  mymensingh: {name:"ময়মনসিংহ", lat:24.7471, lon:90.4203}
+
+// ------------------------------
+// নতুন পাসওয়ার্ড সেট
+// ------------------------------
+
+async function updateNewPassword() {
+  const password = $("newPassword").value;
+  const confirmPassword = $("confirmPassword").value;
+
+  if (password.length < 6) {
+    showMessage(
+      "resetPasswordMsg",
+      "কমপক্ষে ৬ অক্ষরের পাসওয়ার্ড দিন",
+      "error"
+    );
+    return;
+  }
+try {
+    const { error } =
+      await supabaseClient.auth.updateUser({
+        password
+      });
+
+    if (error) throw error;
+
+    showMessage(
+      "resetPasswordMsg",
+      "পাসওয়ার্ড পরিবর্তন হয়েছে। এখন নতুন পাসওয়ার্ড দিয়ে লগইন করুন।"
+    );
+
+    $("newPassword").value = "";
+    $("confirmPassword").value = "";
+
+    await supabaseClient.auth.signOut();
+
+    $("resetPasswordPage").classList.add("hidden");
+    $("login").classList.remove("hidden");
+
+  } catch (error) {
+    showMessage(
+      "resetPasswordMsg",
+      "পাসওয়ার্ড পরিবর্তন হয়নি: " + error.message,
+      "error"
+    );
+  }
+  }
+// ------------------------------
+// নামাজের সময়
+// ------------------------------
+
+const prayerCities = {
+  dhaka: {
+    name: "ঢাকা",
+    lat: 23.8103,
+    lon: 90.4125
+  },
+  chittagong: {
+    name: "চট্টগ্রাম",
+    lat: 22.3569,
+    lon: 91.7832
+  },
+  coxsbazar: {
+    name: "কক্সবাজার",
+    lat: 21.4272,
+    lon: 92.0058
+  },
+  sylhet: {
+    name: "সিলেট",
+    lat: 24.8949,
+    lon: 91.8687
+  },
+  rajshahi: {
+    name: "রাজশাহী",
+    lat: 24.3745,
+    lon: 88.6042
+  },
+  khulna: {
+    name: "খুলনা",
+    lat: 22.8456,
+    lon: 89.5403
+  },
+  barishal: {
+    name: "বরিশাল",
+    lat: 22.7010,
+    lon: 90.3535
+  },
+  rangpur: {
+    name: "রংপুর",
+    lat: 25.7439,
+    lon: 89.2752
+  },
+  mymensingh: {
+    name: "ময়মনসিংহ",
+    lat: 24.7471,
+    lon: 90.4203
+  }
 };
-
 async function loadPrayerTimes(lat, lon, locationName) {
   const box = $("prayerTimes");
-  box.textContent = "নামাজের সময় লোড হচ্ছে...";
+
+  box.textContent = "নামাজের সময় লোড হচ্ছে...";
 
   try {
     const date = new Intl.DateTimeFormat("en-GB", {
@@ -1378,51 +2141,61 @@ async function loadPrayerTimes(lat, lon, locationName) {
       `https://api.aladhan.com/v1/timings/${day}-${month}-${year}?latitude=${lat}&longitude=${lon}&method=1`
     );
 
-    if(!response.ok) throw new Error("Prayer API error");
+    if (!response.ok) {
+      throw new Error("Prayer API error");
+    }
 
     const result = await response.json();
 
-    if(result.code !== 200) throw new Error("Prayer time unavailable");
+    if (result.code !== 200) {
+      throw new Error("Prayer time unavailable");
+    }
 
-    const t = result.data.timings;
+    const times = result.data.timings;
 
     $("prayerLocationStatus").textContent =
       "নির্বাচিত এলাকা: " + locationName;
 
     const prayers = [
-      ["ফজর",t.Fajr],
-      ["সূর্যোদয়",t.Sunrise],
-      ["যোহর",t.Dhuhr],
-      ["আসর",t.Asr],
-      ["মাগরিব",t.Maghrib],
-      ["ইশা",t.Isha]
+      ["ফজর", times.Fajr],
+      ["সূর্যোদয়", times.Sunrise],
+      ["যোহর", times.Dhuhr],
+      ["আসর", times.Asr],
+      ["মাগরিব", times.Maghrib],
+      ["ইশা", times.Isha]
     ];
 
-    box.innerHTML = prayers.map(([name,time]) => {
-      const [hour, minute] = time.split(":").map(Number);
-      const date = new Date();
-
+    box.innerHTML = prayers.map(([name, time]) => {
+      const cleanTime = time.split(" ")[0];
+      const [hour, minute] = cleanTime.split(":").map(Number);
+const date = new Date();
       date.setHours(hour, minute, 0, 0);
 
-      const formattedTime = new Intl.DateTimeFormat("en-US", {
-        hour: "numeric",
-        minute: "2-digit",
-        hour12: true
-      }).format(date);
+      const formattedTime =
+        new Intl.DateTimeFormat("en-US", {
+          hour: "numeric",
+          minute: "2-digit",
+          hour12: true
+        }).format(date);
 
-      return `<div class="prayer-time-row">
-        <strong>${name}</strong>
-        <span>${formattedTime}</span>
-      </div>`;
+      return `
+        <div class="prayer-time-row">
+          <strong>${name}</strong>
+          <span>${formattedTime}</span>
+        </div>
+      `;
     }).join("");
 
-  } catch(error) {
-    box.textContent = "নামাজের সময় লোড করা যায়নি। আবার চেষ্টা করো।";
+  } catch (error) {
+    console.error("Prayer time error:", error);
+
+    box.textContent =
+      "নামাজের সময় লোড করা যায়নি। আবার চেষ্টা করুন।";
   }
 }
 
 function detectPrayerLocation() {
-  if(!navigator.geolocation){
+  if (!navigator.geolocation) {
     $("prayerLocationStatus").textContent =
       "অবস্থান শনাক্ত করা যাচ্ছে না। এলাকা নির্বাচন করুন।";
     return;
@@ -1442,45 +2215,145 @@ function detectPrayerLocation() {
     () => {
       $("prayerLocationStatus").textContent =
         "অবস্থানের অনুমতি পাওয়া যায়নি। নিচে এলাকা নির্বাচন করুন।";
-    },
-    {enableHighAccuracy:true, timeout:10000}
+},
+    {
+      enableHighAccuracy: true,
+      timeout: 10000
+    }
   );
+  }
+
+  // ------------------------------
+// সব বাটনের ইভেন্ট
+// ------------------------------
+
+function setupEventListeners() {
+  $("loginBtn").addEventListener("click", signIn);
+
+  $("password").addEventListener("keydown", event => {
+    if (event.key === "Enter") signIn();
+  });
+
+  $("logoutBtn").addEventListener("click", logout);
+
+  $("saveMemberProfile").addEventListener(
+    "click",
+    saveMemberProfile
+  );
+
+  $("createAccountBtn").addEventListener(
+    "click",
+    createMemberAccount
+  );
+
+  $("resetPasswordBtn").addEventListener(
+    "click",
+    resetMemberPassword
+  );
+
+  $("transactionBtn").addEventListener(
+    "click",
+    addTransaction
+  );
+
+  $("saveAdminEditBtn").addEventListener(
+    "click",
+    saveAdminProfileEdit
+  );
+
+  $("closeEditBtn").addEventListener("click", () => {
+    $("adminEditCard").classList.add("hidden");
+  });
+
+  $("getPrayerLocationBtn").addEventListener(
+    "click",
+    detectPrayerLocation
+  );
+ $("prayerCitySelect").addEventListener(
+    "change",
+    function () {
+      const city = prayerCities[this.value];
+
+      if (city) {
+        loadPrayerTimes(
+          city.lat,
+          city.lon,
+          city.name
+        );
+      }
+    }
+  );
+
+  document.querySelectorAll("[data-target]").forEach(item => {
+    item.addEventListener("click", () => {
+      openServicePage(item.dataset.target);
+    });
+  });
+
+  document.querySelectorAll("[data-nav]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const nav = btn.dataset.nav;
+
+      if (nav === "home") {
+        showHomePage();
+      }
+
+      if (nav === "menu") {
+        openServicePage("memberMenu");
+      }
+
+      if (nav === "notice") {
+        openServicePage("noticeCard");
+      }
+    });
+  });
 }
+// ------------------------------
+// Supabase Auth Recovery Listener
+// ------------------------------
 
-$("getPrayerLocationBtn").addEventListener(
-  "click",
-  detectPrayerLocation
-);
+supabaseClient.auth.onAuthStateChange((event) => {
+  if (event === "PASSWORD_RECOVERY") {
+    passwordRecoveryMode = true;
 
-$("prayerCitySelect").addEventListener("change", function(){
-  const city = prayerCities[this.value];
+    $("login").classList.add("hidden");
+    $("dashboard").classList.add("hidden");
+    $("bottomNav").classList.add("hidden");
 
-  if(city){
-    loadPrayerTimes(city.lat, city.lon, city.name);
+    $("resetPasswordPage").classList.remove("hidden");
   }
 });
 
+// ------------------------------
 // Lucide Icons
+// ------------------------------
 
-if(window.lucide){
-  lucide.createIcons();
+if (window.lucide) {
+  window.lucide.createIcons();
 }
 
-// Register MSUA Service Worker
+// ------------------------------
+// Service Worker
+// ------------------------------
 
-if("serviceWorker" in navigator){
+if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     navigator.serviceWorker.register("./sw.js")
       .then(() => console.log("MSUA App Ready"))
-      .catch(error => console.error("Service Worker Error:", error));
+      .catch(error =>
+        console.error("Service Worker Error:", error)
+      );
   });
 }
 
-// Website চালু
+// ------------------------------
+// ওয়েবসাইট চালু
+// ------------------------------
 
+setupEventListeners();
 initialize();
+      
   
-
 </script>
 </body>
 </html>
