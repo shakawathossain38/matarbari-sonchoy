@@ -1771,72 +1771,68 @@ async function resetMemberPassword() {
 // জমা ও উত্তোলন
 // ------------------------------
 
+
 async function addTransaction() {
-  if (currentRole !== "admin") return;
-
-  const memberId = $("memberId").value;
-  const amount = Number($("amount").value);
-
-  const type = $("kind").value === "জমা"
-    ? "deposit"
-    : "withdrawal";
-
-  const description = $("note").value.trim();
-
-  if (
-    !memberId ||
-    !Number.isFinite(amount) ||
-    amount <= 0
-  ) {
-    showMessage(
-      "adminMsg",
-      "সদস্য ও সঠিক পরিমাণ দিন",
-      "error"
-    );
+  if (currentRole !== "admin") {
+    showMessage("adminMsg", "শুধু অ্যাডমিন লেনদেন যোগ করতে পারবেন।", "error");
     return;
   }
 
-  const now = new Date();
+  const memberId = $("memberId")?.value;
+  const amount = Number($("amount")?.value);
+  const kindValue = $("kind")?.value;
+  const description = $("note")?.value.trim() || "";
 
-  const entryDate = new Intl.DateTimeFormat(
-    "en-CA",
-    {
+  if (!memberId || !Number.isFinite(amount) || amount <= 0) {
+    showMessage("adminMsg", "সদস্য ও সঠিক পরিমাণ দিন।", "error");
+    return;
+  }
+
+  if (!["জমা", "উত্তোলন"].includes(kindValue)) {
+    showMessage("adminMsg", "লেনদেনের ধরন নির্বাচন করুন।", "error");
+    return;
+  }
+
+  const btn = $("transactionBtn");
+  if (btn) btn.disabled = true;
+
+  try {
+    const entryDate = new Intl.DateTimeFormat("en-CA", {
       timeZone: "Asia/Dhaka",
       year: "numeric",
       month: "2-digit",
       day: "2-digit"
-    }
-  ).format(now);
+    }).format(new Date());
 
-  const { error } = await supabaseClient
-    .from("transactions")
-    .insert({
-      member_id: memberId,
-      entry_date: entryDate,
-      kind: type,
-      amount,
-      description,
-      created_by: currentUser.id
-    });
-if (error) {
-    showMessage(
-      "adminMsg",
-      "লেনদেন সংরক্ষণ হয়নি: " + error.message,
-      "error"
-    );
-    return;
+    const { error } = await supabaseClient
+      .from("transactions")
+      .insert({
+        member_id: memberId,
+        entry_date: entryDate,
+        kind: kindValue === "জমা" ? "deposit" : "withdrawal",
+        amount: amount,
+        description: description,
+        created_by: currentUser.id
+      });
+
+    if (error) throw error;
+
+    showMessage("adminMsg", "লেনদেন সফলভাবে সংরক্ষণ হয়েছে।", "success");
+
+    $("amount").value = "";
+    $("note").value = "";
+
+    await loadTransactions();
+
+  } catch (error) {
+    console.error("Transaction Error:", error);
+    showMessage("adminMsg", "লেনদেন সংরক্ষণ হয়নি: " + error.message, "error");
+
+  } finally {
+    if (btn) btn.disabled = false;
   }
-
-  showMessage(
-    "adminMsg",
-    "লেনদেন সংরক্ষণ হয়েছে"
-  );
-
-  $("amount").value = "";
-  $("note").value = "";
-
-  await loadTransactions();
 }
+
 
 // ------------------------------
 // অ্যাডমিন: প্রোফাইল তালিকা
