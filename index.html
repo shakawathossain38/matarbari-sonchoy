@@ -1690,7 +1690,82 @@ async function loadAdminMembers() {
 
     option.value = member.auth_user_id;
     option.textContent =
-      member.member_code + " - " + member.full_name;    $("memberId").appendChild(option);    $("resetMemberId").appendChild(      option.cloneNode(true)    );  });}// ------------------------------// নতুন সদস্য অ্যাকাউন্ট// ------------------------------async function createMemberAccount() {  const name = $("newMemberName").value.trim();  const phone = $("newMemberPhone").value.trim();  const email = $("newMemberEmail").value.trim();  const memberCode = $("newMemberCode")    .value.trim()    .toUpperCase();  const password = $("newMemberPassword").value;  if (    !name ||    !validMemberId(memberCode) ||    password.length < 6  ) {    showMessage(      "createMsg",      "নাম, সঠিক সদস্য আইডি এবং কমপক্ষে ৬ অক্ষরের পাসওয়ার্ড দিন",      "error"    );    return;  }  const btn = $("createAccountBtn");  btn.disabled = true;try {    const { data: sessionData } =      await supabaseClient.auth.getSession();    if (!sessionData.session?.access_token) {      throw new Error("অ্যাডমিন লগইন পাওয়া যায়নি");    }    const { data, error } =      await supabaseClient.functions.invoke(        "create-member-account",        {          body: {            name,            phone,            email,            memberCode,            password          }        }      );    if (error) throw error;    showMessage(      "createMsg",      data?.message || "সদস্য অ্যাকাউন্ট তৈরি হয়েছে"    );    [      "newMemberName",      "newMemberPhone",      "newMemberEmail",      "newMemberCode",      "newMemberPassword"    ].forEach(id => {      $(id).value = "";    });await loadAdminMembers();  } catch (error) {    showMessage(      "createMsg",      error.message,      "error"    );  } finally {    btn.disabled = false;  }}// ------------------------------// সদস্যের পাসওয়ার্ড রিসেট// ------------------------------async function resetMemberPassword() {  if (currentRole !== "admin") return;  const userId = $("resetMemberId").value;  const password = $("resetPassword").value;  if (!userId || password.length < 6) {    showMessage(      "resetMsg",      "সদস্য নির্বাচন করুন এবং কমপক্ষে ৬ অক্ষরের পাসওয়ার্ড দিন",      "error"    );    return;  }  const selectedText =    $("resetMemberId").selectedOptions[0]?.textContent || "";  const memberCode = selectedText    .split(" - ")[0]    .trim()    .toUpperCase();  if (!validMemberId(memberCode)) {  "resetMsg",      "সঠিক সদস্য আইডি পাওয়া যায়নি",      "error"    );    return;  }  const btn = $("resetPasswordBtn");  btn.disabled = true;  try {    const { data, error } =      await supabaseClient.functions.invoke(        "admin-reset-member-password",        {          body: {            member_code: memberCode,            password          }        }      );    if (error) throw error;    showMessage(      "resetMsg",      data?.message || "পাসওয়ার্ড পরিবর্তন হয়েছে"    );    $("resetPassword").value = "";  } catch (error) {    showMessage(      "resetMsg",      "সমস্যা: " + error.message,      "error"    );  } finally {    btn.disabled = false;  }}
+      member.member_code + " - " + member.full_name;    $("memberId").appendChild(option);    $("resetMemberId").appendChild(      option.cloneNode(true)    );  });}
+  
+// ------------------------------
+// সদস্যের পাসওয়ার্ড রিসেট
+// ------------------------------
+
+async function resetMemberPassword() {
+  if (currentRole !== "admin") return;
+
+  const userId = $("resetMemberId")?.value;
+  const password = $("resetPassword")?.value;
+
+  if (!userId || !password || password.length < 6) {
+    showMessage(
+      "resetMsg",
+      "সদস্য নির্বাচন করুন এবং কমপক্ষে ৬ অক্ষরের পাসওয়ার্ড দিন",
+      "error"
+    );
+    return;
+  }
+
+  const selectedText =
+    $("resetMemberId").selectedOptions[0]?.textContent || "";
+
+  const memberCode = selectedText
+    .split(" - ")[0]
+    .trim()
+    .toUpperCase();
+
+  if (!validMemberId(memberCode)) {
+    showMessage(
+      "resetMsg",
+      "সঠিক সদস্য আইডি পাওয়া যায়নি",
+      "error"
+    );
+    return;
+  }
+
+  const btn = $("resetPasswordBtn");
+  if (btn) btn.disabled = true;
+
+  try {
+    const { data, error } =
+      await supabaseClient.functions.invoke(
+        "admin-reset-member-password",
+        {
+          body: {
+            member_code: memberCode,
+            password: password
+          }
+        }
+      );
+
+    if (error) throw error;
+
+    showMessage(
+      "resetMsg",
+      data?.message || "পাসওয়ার্ড পরিবর্তন হয়েছে",
+      "success"
+    );
+
+    $("resetPassword").value = "";
+
+  } catch (error) {
+    console.error("Password Reset Error:", error);
+
+    showMessage(
+      "resetMsg",
+      "সমস্যা: " + error.message,
+      "error"
+    );
+
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
 
 // ------------------------------
 // জমা ও উত্তোলন
